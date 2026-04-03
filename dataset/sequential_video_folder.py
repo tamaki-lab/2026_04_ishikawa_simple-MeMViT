@@ -23,7 +23,7 @@ from pytorchvideo.transforms import (
 )
 
 
-def data_loader(
+def sequential_video_folder(
         clip_duration,
         video_edge_time,
         batch_size,

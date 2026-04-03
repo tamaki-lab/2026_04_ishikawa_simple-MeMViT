@@ -1,7 +1,7 @@
 from .cifar10 import cifar10, Cifar10Info
 from .image_folder import image_folder, ImageFolderInfo
 from .video_folder import video_folder, VideoFolderInfo
-from .sequential_loader import data_loader
+from .sequential_video_folder import sequential_video_folder
 from .zero_images import zero_images, ZeroImageInfo
 from .transforms import (
     transform_image, TransformImageInfo,
@@ -17,7 +17,7 @@ __all__ = [
     'ImageFolderInfo',
     'video_folder',
     'VideoFolderInfo',
-    'data_loader',
+    'sequential_video_folder',
     'zero_images',
     'ZeroImageInfo',
     'transform_image',

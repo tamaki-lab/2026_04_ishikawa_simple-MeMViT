@@ -11,7 +11,7 @@ from dataset import (
     ImageFolderInfo,
     video_folder,
     VideoFolderInfo,
-    data_loader,
+    sequential_video_folder,
     zero_images,
     ZeroImageInfo,
     transform_image,
@@ -112,7 +112,7 @@ def configure_dataloader(
             ))
 
     elif dataset_name == "SequentialVideoFolder":
-        train_loader, val_loader, n_classes = data_loader(
+        train_loader, val_loader, n_classes = sequential_video_folder(
             clip_duration=args.clip_duration,
             video_edge_time=args.video_edge_time,
             batch_size=args.batch_size,

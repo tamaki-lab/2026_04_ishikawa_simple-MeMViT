@@ -343,7 +343,7 @@
             ]
         },
         {
-            "name": "SequentialVideoFolder",
+            "name": "SequentialVideoFolder 3GPU(0,1,2) ddp",
             "type": "debugpy",
             "request": "launch",
             "program": "main_pl.py",
@@ -376,6 +376,42 @@
                 "--disable_comet",
                 "--devices",
                 "0,1,2"
+            ]
+        },
+        {
+            "name": "SequentialVideoFolder 1GPU",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main_pl.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "0",
+                // "CUDA_LAUNCH_BLOCKING": "1",
+            },
+            "justMyCode": false,
+            "args": [
+                "-d",
+                "SequentialVideoFolder",
+                "-td",
+                "/mnt/NAS-TVS872XT/dataset/Kinetics400/train/",
+                "-vd",
+                "/mnt/NAS-TVS872XT/dataset/Kinetics400/val/",
+                "-m",
+                "vit_b",
+                "-w",
+                "8",
+                "-b",
+                "2",
+                "-e",
+                "5",
+                "--optimizer",
+                "Adam",
+                "--log_interval_steps",
+                "10",
+                "--disable_comet",
+                "--devices",
+                "1"
             ]
         },
     ]

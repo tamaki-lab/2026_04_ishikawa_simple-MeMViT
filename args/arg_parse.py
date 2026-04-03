@@ -61,14 +61,14 @@ class ArgParse:
             type=float,
             default=0.5,
             help="number of seconds to ignore the end of the video",
-            #       sequential_loader
+            #       sequential_video_folder
         )
         parser.add_argument(
             "--ext",
             type=str,
             default="*.mp4",
             help="video file extension",
-            #       sequential_loader
+            #       sequential_video_folder
         )
         # model
         parser.add_argument(
