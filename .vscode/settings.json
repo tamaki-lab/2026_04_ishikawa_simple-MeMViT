@@ -9,7 +9,7 @@
     },
     "editor.renderWhitespace": "boundary",
     "trailing-spaces.trimOnSave": true,
-    "files.autoSave": "onFocusChange",
+    "files.autoSave": "afterDelay",
     "files.insertFinalNewline": true,
     "files.trimFinalNewlines": true,
     "files.trimTrailingWhitespace": true,

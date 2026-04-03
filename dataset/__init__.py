@@ -1,6 +1,7 @@
 from .cifar10 import cifar10, Cifar10Info
 from .image_folder import image_folder, ImageFolderInfo
 from .video_folder import video_folder, VideoFolderInfo
+from .sequential_loader import data_loader
 from .zero_images import zero_images, ZeroImageInfo
 from .transforms import (
     transform_image, TransformImageInfo,
@@ -16,6 +17,7 @@ __all__ = [
     'ImageFolderInfo',
     'video_folder',
     'VideoFolderInfo',
+    'data_loader',
     'zero_images',
     'ZeroImageInfo',
     'transform_image',
@@ -24,5 +26,5 @@ __all__ = [
     'TransformVideoInfo',
     'configure_dataloader',
     'DataloadersInfo',
-    'TrainValDataModule'
+    'TrainValDataModule',
 ]

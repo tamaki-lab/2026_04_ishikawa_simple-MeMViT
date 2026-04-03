@@ -39,7 +39,7 @@ class ArgParse:
             "--dataset_name",
             type=str,
             default="CIFAR10",
-            choices=["CIFAR10", "ImageFolder", "VideoFolder", "ZeroImages"],
+            choices=["CIFAR10", "ImageFolder", "VideoFolder", "ZeroImages", "SequentialVideoFolder"],
             help="name of dataset.",
         )
         parser.add_argument(
@@ -56,7 +56,20 @@ class ArgParse:
             default="val",
             help="subdir name from root for validation set.",
         )
-
+        parser.add_argument(
+            "--video_edge_time",
+            type=float,
+            default=0.5,
+            help="number of seconds to ignore the end of the video",
+            #       sequential_loader
+        )
+        parser.add_argument(
+            "--ext",
+            type=str,
+            default="*.mp4",
+            help="video file extension",
+            #       sequential_loader
+        )
         # model
         parser.add_argument(
             "--torch_home",

@@ -11,6 +11,7 @@ from dataset import (
     ImageFolderInfo,
     video_folder,
     VideoFolderInfo,
+    data_loader,
     zero_images,
     ZeroImageInfo,
     transform_image,
@@ -33,7 +34,7 @@ class DataloadersInfo:
     n_classes: int
 
 
-SupportedDatasets = Literal["CIFAR10", "ImageFolder", "VideoFolder", "ZeroImages"]
+SupportedDatasets = Literal["CIFAR10", "ImageFolder", "VideoFolder", "ZeroImages", "SequentialVideoFolder"]
 
 
 def configure_dataloader(
@@ -110,6 +111,16 @@ def configure_dataloader(
                 transform=train_transform,
             ))
 
+    elif dataset_name == "SequentialVideoFolder":
+        train_loader, val_loader, n_classes = data_loader(
+            clip_duration=args.clip_duration,
+            video_edge_time=args.video_edge_time,
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+            ext=args.ext,
+            train_dir=args.train_dir,
+            val_dir=args.val_dir,
+        )
     else:
         raise ValueError("invalid dataset_name")
 
