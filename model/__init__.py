@@ -8,6 +8,7 @@ from .x3d import X3DM
 from .resnet import ResNet18, ResNet50  # pylint: disable=import-error
 from .abn import ABNResNet50
 from .vit import ViTb
+from .memvit import MemViT
 from .dummy_models import ZeroOutputModel
 
 from .model_factory import configure_model
@@ -25,6 +26,7 @@ __all__ = [
     'ResNet50',
     'ABNResNet50',
     'ViTb',
+    'MemViT',
     'ZeroOutputModel',
     'configure_model',
     'SimpleLightningModel',

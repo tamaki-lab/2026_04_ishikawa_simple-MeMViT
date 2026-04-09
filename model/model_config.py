@@ -8,6 +8,7 @@ SupportedModels = Literal[
     "abn_r50",
     "vit_b",
     "x3d",
+    "memvit",
     "zero_output_dummy",
 ]
 
