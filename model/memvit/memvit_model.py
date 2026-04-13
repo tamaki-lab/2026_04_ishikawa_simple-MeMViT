@@ -319,7 +319,6 @@ class MemViT(nn.Module):
         return names
 
     def forward(self, x, video_names=None):
-        x = x[0]
         H = x.shape[3] // self.patch_stride[1]
 
         x = self.patch_embed(x)
@@ -360,7 +359,7 @@ class MemViT(nn.Module):
         x = self.norm(x)
 
         if self.cfg.MVIT.FRAME_LEVEL:
-            x = x[:, (1 if self.cls_embed_on else 0) :].reshape(
+            x = x[:, (1 if self.cls_embed_on else 0):].reshape(
                 [x.shape[0]] + thw + [x.shape[-1]]
             )
         else:
@@ -385,7 +384,7 @@ class MemViT(nn.Module):
             if cur_len < gap_size:
                 return []
             num_used = cur_len // gap_size
-            return list(range(cur_len)[-gap_size * num_used :: gap_size])
+            return list(range(cur_len)[-gap_size * num_used:: gap_size])
 
         if self.cfg.MEMVIT.SAMPLER == "all" or not self.training:
             return range(cur_len)
