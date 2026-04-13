@@ -83,7 +83,7 @@ class ArgParse:
             "--model_name",
             type=str,
             default="resnet18",
-            choices=["resnet18", "resnet50", "x3d", "abn_r50", "vit_b", "zero_output_dummy"],
+            choices=["resnet18", "resnet50", "x3d", "abn_r50", "vit_b", "memvit", "zero_output_dummy"],
             help="name of the model",
         )
 
@@ -260,6 +260,40 @@ class ArgParse:
             action="store_true",
             help="do not use comet.ml (default: use comet)",
         )
+
+        # 以下parser4つ yaml用に追加
+
+        # config file
+        parser.add_argument(
+            "--cfg_file",
+            type=str,
+            default=None,
+            help="path to config YAML file",
+        )
+
+        # config override options
+        parser.add_argument(
+            "--opts",
+            nargs="+",
+            type=str,
+            default=None,
+            help="CLI override options (e.g., --opts TRAIN.BATCH_SIZE 32)",
+        )
+
+        # distributed training
+        parser.add_argument(
+            "--num_shards",
+            type=int,
+            default=1,
+            help="number of shards for distributed training",
+        )
+        parser.add_argument(
+            "--shard_id",
+            type=int,
+            default=0,
+            help="shard id for distributed training",
+        )
+
         parser.set_defaults(disable_comet=False)
 
         args = parser.parse_args()
