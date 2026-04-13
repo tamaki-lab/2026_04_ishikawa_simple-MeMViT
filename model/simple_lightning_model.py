@@ -1,6 +1,6 @@
 import argparse
 import os
-
+import torch
 
 import lightning.pytorch as pl
 from lightning.pytorch.callbacks import ModelCheckpoint
@@ -25,8 +25,8 @@ class SimpleLightningModel(pl.LightningModule):
     def __init__(
             self,
             command_line_args: argparse.Namespace,
-            n_classes: int,
             exp_name: str,
+            cfg=None,
     ):
         """constructor
 
@@ -37,17 +37,19 @@ class SimpleLightningModel(pl.LightningModule):
             command_line_args (argparse): args
             n_classes (int): number of categories
             exp_name (str): experiment name of comet.ml
+            cfg (optional): config object from defaults.py
         """
         super().__init__()
         self.args = command_line_args
         self.exp_name = exp_name
+        self.cfg = cfg
 
         self.model = configure_model(ModelConfig(
             model_name=self.args.model_name,
-            use_pretrained=self.args.use_pretrained,
+            cfg=self.cfg,
             torch_home=self.args.torch_home,
-            n_classes=n_classes,
         ))
+        self.criterion = torch.nn.CrossEntropyLoss()
 
         # https://lightning.ai/docs/pytorch/stable/common/lightning_module.html#save-hyperparameters
         self.save_hyperparameters()
@@ -142,13 +144,14 @@ class SimpleLightningModel(pl.LightningModule):
                 https://lightning.ai/docs/pytorch/stable/api/lightning.pytorch.core.LightningModule.html#lightning.pytorch.core.LightningModule.training_step
         """
 
-        data, labels = batch  # (BCHW, B) or {'video': BCTHW, 'label': B}
-        batch_size = data.size(0)
+        data, labels, frame_indices, infos = batch
+        batch_size = data[0].size(0)
+        video_names = [str(m["video_id"]) for m in infos]
 
-        outputs = self.model(data, labels=labels)
-        loss = outputs.loss
+        logits = self.model(data, video_names=video_names)
+        loss = self.criterion(logits, labels)
 
-        top1, top5, *_ = compute_topk_accuracy(outputs.logits, labels, topk=(1, 5))
+        top1, top5, *_ = compute_topk_accuracy(logits, labels, topk=(1, 5))
         self.log_train_loss_top15(loss, top1, top5, batch_size)
 
         return loss
@@ -186,11 +189,12 @@ class SimpleLightningModel(pl.LightningModule):
                 https://lightning.ai/docs/pytorch/stable/api/lightning.pytorch.core.LightningModule.html#lightning.pytorch.core.LightningModule.validation_step
         """
 
-        data, labels = batch  # (BCHW, B) or {'video': BCTHW, 'label': B}
-        batch_size = data.size(0)
+        data, labels, frame_indices, infos = batch
+        batch_size = data[0].size(0)
+        video_names = [str(m["video_id"]) for m in infos]
 
-        outputs = self.model(data, labels=labels)
-        loss = outputs.loss
+        logits = self.model(data, video_names=video_names)
+        loss = self.criterion(logits, labels)
 
-        top1, top5, *_ = compute_topk_accuracy(outputs.logits, labels, topk=(1, 5))
+        top1, top5, *_ = compute_topk_accuracy(logits, labels, topk=(1, 5))
         self.log_val_loss_top15(loss, top1, top5, batch_size)
