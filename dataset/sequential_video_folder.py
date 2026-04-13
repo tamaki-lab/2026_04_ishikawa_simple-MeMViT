@@ -98,13 +98,11 @@ def transform_video(is_train):
 
 
 def collate_fn(batch):
-    new_batch = [[], [], [], []]
-    for i in range(len(batch)):
-        new_batch[0].append(batch[i][0])
-        new_batch[1].append(batch[i][1])
-        new_batch[2].append(batch[i][2])
-        new_batch[3].append(batch[i][3])
-    return new_batch
+    subclips = torch.stack([item[0] for item in batch], dim=0)
+    labels = torch.tensor([item[1] for item in batch], dtype=torch.long)
+    frame_indices = [item[2] for item in batch]
+    infos = [item[3] for item in batch]
+    return subclips, labels, frame_indices, infos
 
 
 class SequentialVideoDataset(IterableDataset):
