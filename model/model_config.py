@@ -3,19 +3,12 @@ from dataclasses import dataclass
 
 
 SupportedModels = Literal[
-    "resnet18",
-    "resnet50",
-    "abn_r50",
-    "vit_b",
-    "x3d",
     "memvit",
-    "zero_output_dummy",
 ]
 
 
 @dataclass
 class ModelConfig:
-    model_name: SupportedModels = "resnet18"
-    use_pretrained: bool = True
-    torch_home: str = "./"
-    n_classes: int = 10
+    model_name: SupportedModels = "memvit"
+    cfg: dict = None
+    torch_home: str = None
