@@ -9,6 +9,7 @@ from logger import configure_logger_pl
 from callback import configure_callbacks
 from dataset import TrainValDataModule
 from model import SimpleLightningModel
+from model.memvit.config.defaults import get_cfg, assert_and_infer_cfg
 
 
 def main():
@@ -25,12 +26,23 @@ def main():
         command_line_args=args,
         dataset_name=args.dataset_name,
     )
+
+    cfg = get_cfg()
+    if args.cfg_file is not None:
+        cfg.merge_from_file(args.cfg_file)
+
+    if args.opts is not None:
+        cfg.merge_from_list(args.opts)
+
+    cfg.DETECTION.ENABLE = False
+
+    cfg = assert_and_infer_cfg(cfg)
+
     model_lightning = SimpleLightningModel(
         command_line_args=args,
-        n_classes=data_module.n_classes,
+        cfg=cfg,
         exp_name=exp_name
     )
-
     callbacks = configure_callbacks()
 
     # https://lightning.ai/docs/pytorch/stable/common/trainer.html
