@@ -242,3 +242,6 @@ class SequentialVideoDataset(IterableDataset):
 
     def __getitem__(self, index):
         raise NotImplementedError("error")
+
+    def __len__(self):
+        return len(self.video_file_path)
