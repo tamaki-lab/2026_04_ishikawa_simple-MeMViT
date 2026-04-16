@@ -261,6 +261,21 @@ class ArgParse:
             help="do not use comet.ml (default: use comet)",
         )
 
+        parser.add_argument(
+            "--loop_mode",
+            type=str,
+            default="train",
+            choices=["train", "val_only"],
+            help="training mode: 'train' for training loop, 'val_only' for validation only.",
+        )
+        parser.add_argument(
+            "-vis",
+            "--val_interval_steps",
+            type=int,
+            default=None,
+            help="validation interval in steps.",
+        )
+
         # 以下parser4つ yaml用に追加
 
         # config file
