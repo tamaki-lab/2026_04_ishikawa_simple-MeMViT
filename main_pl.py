@@ -56,6 +56,7 @@ def main():
         log_every_n_steps=args.log_interval_steps,
         accumulate_grad_batches=args.grad_accum,
         num_sanity_val_steps=0,
+        val_check_interval=args.val_interval_steps,
         # precision="16-true",  # for FP16 training, use with caution for nan/inf
         # fast_dev_run=True, # only for debug
         # fast_dev_run=5,  # only for debug
@@ -66,11 +67,18 @@ def main():
         # profiler="simple",
     )
 
-    trainer.fit(
-        model=model_lightning,
-        datamodule=data_module,
-        ckpt_path=args.checkpoint_to_resume,
-    )
+    if args.loop_mode == "train":
+        trainer.fit(
+            model=model_lightning,
+            datamodule=data_module,
+            ckpt_path=args.checkpoint_to_resume,
+        )
+    elif args.loop_mode == "val_only":
+        trainer.validate(
+            model=model_lightning,
+            datamodule=data_module,
+            ckpt_path=args.checkpoint_to_resume,
+        )
 
 
 if __name__ == "__main__":
