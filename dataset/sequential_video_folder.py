@@ -31,6 +31,12 @@ def sequential_video_folder(
         ext,
         train_dir,
         val_dir,
+        frames_per_clip=16,
+        label_mode="video",
+        train_annotation_path=None,
+        val_annotation_path=None,
+        background_label="background",
+        epic_label_type="verb",
 ):
 
     train_dataset = SequentialVideoDataset(
@@ -40,7 +46,13 @@ def sequential_video_folder(
         ext,
         train_dir,
         is_train=True,
-        transform=transform_video(is_train=True),
+        transform=transform_video(is_train=True, frames_per_clip=frames_per_clip),
+        label_mode=label_mode,
+        annotation_path=train_annotation_path,
+        background_label=background_label,
+        frames_per_clip=frames_per_clip,
+        batch_size=batch_size,
+        epic_label_type=epic_label_type,
     )
 
     val_dataset = SequentialVideoDataset(
@@ -50,7 +62,13 @@ def sequential_video_folder(
         ext,
         val_dir,
         is_train=False,
-        transform=transform_video(is_train=False),
+        transform=transform_video(is_train=False, frames_per_clip=frames_per_clip),
+        label_mode=label_mode,
+        annotation_path=val_annotation_path,
+        background_label=background_label,
+        frames_per_clip=frames_per_clip,
+        batch_size=batch_size,
+        epic_label_type=epic_label_type,
     )
 
     train_loader = torch.utils.data.DataLoader(
@@ -72,9 +90,9 @@ def sequential_video_folder(
     return train_loader, val_loader, n_classes
 
 
-def transform_video(is_train):
+def transform_video(is_train, frames_per_clip=16):
     transform_list = [
-        UniformTemporalSubsample(16),
+        UniformTemporalSubsample(frames_per_clip),
         transforms.Lambda(lambda x: x / 255.),
         Normalize(
             [0.485, 0.456, 0.406],

@@ -120,6 +120,12 @@ def configure_dataloader(
             ext=args.ext,
             train_dir=args.train_dir,
             val_dir=args.val_dir,
+            frames_per_clip=args.frames_per_clip,
+            label_mode=args.sequential_label_mode,
+            train_annotation_path=args.train_annotation_path,
+            val_annotation_path=args.val_annotation_path,
+            background_label=args.background_label,
+            epic_label_type=args.epic_label_type,
         )
     else:
         raise ValueError("invalid dataset_name")

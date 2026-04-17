@@ -70,6 +70,38 @@ class ArgParse:
             help="video file extension",
             #       sequential_video_folder
         )
+        parser.add_argument(
+            "--sequential_label_mode",
+            type=str,
+            default="video",
+            choices=["video", "frame"],
+            help="label mode for SequentialVideoFolder. video: one label per video/clip. frame: one label per frame in a clip.",
+        )
+        parser.add_argument(
+            "--train_annotation_path",
+            type=str,
+            default=None,
+            help="EPIC-Kitchens train annotation CSV for SequentialVideoFolder frame mode.",
+        )
+        parser.add_argument(
+            "--val_annotation_path",
+            type=str,
+            default=None,
+            help="EPIC-Kitchens validation annotation CSV for SequentialVideoFolder frame mode.",
+        )
+        parser.add_argument(
+            "--epic_label_type",
+            type=str,
+            default="verb",
+            choices=["verb", "noun"],
+            help="EPIC-Kitchens label column to use in SequentialVideoFolder frame mode.",
+        )
+        parser.add_argument(
+            "--background_label",
+            type=str,
+            default="background",
+            help="fallback label for frames without annotation in SequentialVideoFolder frame mode.",
+        )
         # model
         parser.add_argument(
             "--torch_home",

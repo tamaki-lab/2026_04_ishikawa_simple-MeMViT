@@ -1,4 +1,5 @@
 import sys
+import torch
 from args.arg_parse import ArgParse
 from dataset.dataset_pl import TrainValDataModule
 
@@ -33,10 +34,16 @@ def test():
                 print(f"Batch has {len(batch)} elements (defined in collate_fn).")
                 for j, item in enumerate(batch):
                     if hasattr(item, "shape"):
-                        print(f"  element {j} shape: {item.shape}")
+                        print(f"  element {j} shape: {item.shape}, dtype: {getattr(item, 'dtype', None)}")
+                        if torch.is_tensor(item) and item.numel() > 0:
+                            flat = item.flatten()
+                            print(f"    first values: {flat[:min(16, flat.numel())].tolist()}")
                     elif isinstance(item, list):
                         if len(item) > 0 and hasattr(item[0], "shape"):
                             print(f"  element {j} is list. length: {len(item)}, item[0] shape: {item[0].shape}")
+                        elif len(item) > 0 and isinstance(item[0], dict):
+                            print(f"  element {j} is list. length: {len(item)}, item[0] keys: {list(item[0].keys())}")
+                            print(f"    item[0]: {item[0]}")
                         else:
                             print(f"  element {j} is list. length: {len(item)}")
                     else:

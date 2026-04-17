@@ -422,7 +422,7 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "env": {
-                "CUDA_VISIBLE_DEVICES": "0"
+                "CUDA_VISIBLE_DEVICES": "2"
             },
             "justMyCode": false,
             "args": [
@@ -449,6 +449,40 @@
                 "1",
                 "--cfg_file",
                 "configs/MeMViT_16_K400.yaml"
+            ]
+        },
+        {
+            "name": "Debug EPIC frame dataloader",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "test_dataloader.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "2"
+            },
+            "justMyCode": false,
+            "args": [
+                "-d",
+                "SequentialVideoFolder",
+                "-td",
+                "/mnt/NAS-TVS872XT/dataset/EPIC_KITCHENS/videos",
+                "-vd",
+                "/mnt/NAS-TVS872XT/dataset/EPIC_KITCHENS/videos",
+                "--sequential_label_mode",
+                "frame",
+                "--train_annotation_path",
+                "/mnt/NAS-TVS872XT/dataset/EPIC_KITCHENS/epic-kitchens-100-annotations/EPIC_100_train.csv",
+                "--val_annotation_path",
+                "/mnt/NAS-TVS872XT/dataset/EPIC_KITCHENS/epic-kitchens-100-annotations/EPIC_100_validation.csv",
+                "--epic_label_type",
+                "verb",
+                "--frames_per_clip",
+                "16",
+                "-b",
+                "1",
+                "-w",
+                "0"
             ]
         },
         {
