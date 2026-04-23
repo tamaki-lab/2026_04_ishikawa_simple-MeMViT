@@ -1,13 +1,7 @@
-import av
-import os
-import time
-import torch
-import random
-import numpy as np
 
+import torch
 from .sequential_video_dataset import SequentialVideoDataset
-from pathlib import Path
-from torch.utils.data import IterableDataset
+
 from torchvision import transforms
 from torchvision.transforms import (
     CenterCrop,
