@@ -178,7 +178,7 @@
                 "--frames_per_clip",
                 "16",
                 "-b",
-                "8",
+                "4",
                 "-w",
                 "4",
                 "-e",
@@ -195,14 +195,14 @@
             ]
         },
         {
-            "name": "Train EPIC frame 3GPU(0,1,2) ddp memvit",
+            "name": "Train EPIC frame 2GPU(0,1) ddp memvit",
             "type": "debugpy",
             "request": "launch",
             "program": "main_pl.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "env": {
-                "CUDA_VISIBLE_DEVICES": "0,1,2"
+                "CUDA_VISIBLE_DEVICES": "0,1"
             },
             "justMyCode": false,
             "args": [
@@ -225,7 +225,7 @@
                 "--frames_per_clip",
                 "16",
                 "-b",
-                "8",
+                "4",
                 "-w",
                 "4",
                 "-e",
@@ -236,7 +236,7 @@
                 "10",
                 "--disable_comet",
                 "--devices",
-                "0,1,2",
+                "0,1",
                 "--cfg_file",
                 "configs/MeMViT_16_K400.yaml"
             ]
@@ -313,7 +313,7 @@
                 "--frames_per_clip",
                 "16",
                 "-b",
-                "8",
+                "4",
                 "-w",
                 "4",
                 "-e",
