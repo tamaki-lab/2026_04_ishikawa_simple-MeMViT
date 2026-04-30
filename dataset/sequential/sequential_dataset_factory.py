@@ -4,10 +4,10 @@ from typing import Optional
 
 import torch
 
-from epic_kitchens_sequential_dataset import EpicKitchenSequentialDataset
+from .epic_kitchens_sequential_dataset import EpicKitchenSequentialDataset
 
-from sequential_transforms import build_sequential_video_transform
-from sequential_collate import (
+from .sequential_transforms import build_sequential_video_transform
+from .sequential_collate import (
     sequential_collate_fn,
     classification_collate_fn,
 )
