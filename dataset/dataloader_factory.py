@@ -34,7 +34,8 @@ class DataloadersInfo:
     n_classes: int
 
 
-SupportedDatasets = Literal["CIFAR10", "ImageFolder", "VideoFolder", "ZeroImages", "SequentialVideoFolder"]
+SupportedDatasets = Literal["CIFAR10", "ImageFolder", "VideoFolder",
+                            "ZeroImages", "SequentialVideoFolder", "EpicKitchenSequentialDataset"]
 
 
 def configure_dataloader(
@@ -111,7 +112,7 @@ def configure_dataloader(
                 transform=train_transform,
             ))
 
-    elif dataset_name == "SequentialVideoFolder":
+    elif dataset_name == "SequentialVideoFolder" or dataset_name == "EpicKitchenSequentialDataset":
         train_loader, val_loader, n_classes = sequential_video_folder(
             clip_duration=args.clip_duration,
             video_edge_time=args.video_edge_time,
