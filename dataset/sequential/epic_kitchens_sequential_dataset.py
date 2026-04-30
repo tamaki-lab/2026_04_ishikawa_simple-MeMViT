@@ -93,11 +93,7 @@ class EpicKitchenSequentialDataset(BaseSequentialVideoDataset):
     def load_video_items(self) -> list[VideoItem]:
         self.annotations = self.parse_annotations()
 
-        video_paths = [
-            path
-            for path in Path(self.video_path).glob(f"**/{self.ext}")
-            if not path.is_dir()
-        ]
+        video_paths = self.list_video_paths()
 
         return [
             VideoItem(
@@ -119,6 +115,20 @@ class EpicKitchenSequentialDataset(BaseSequentialVideoDataset):
             label_name: idx
             for idx, label_name in enumerate(sorted(labels))
         }
+
+    def list_video_paths(self) -> list[Path]:
+        patterns = [pattern.strip() for pattern in str(self.ext).split(",")]
+        patterns = [pattern for pattern in patterns if pattern]
+        if not patterns:
+            patterns = [str(self.ext)]
+
+        video_paths = {
+            path
+            for pattern in patterns
+            for path in Path(self.video_path).glob(f"**/{pattern}")
+            if not path.is_dir()
+        }
+        return sorted(video_paths)
 
     def iter_logical_samples(
         self,

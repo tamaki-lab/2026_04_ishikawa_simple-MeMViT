@@ -39,7 +39,13 @@ class ArgParse:
             "--dataset_name",
             type=str,
             default="CIFAR10",
-            choices=["CIFAR10", "ImageFolder", "VideoFolder", "ZeroImages", "SequentialVideoFolder"],
+            choices=[
+                "CIFAR10",
+                "ImageFolder",
+                "VideoFolder",
+                "ZeroImages",
+                "SequentialVideoFolder",
+                "EpicKitchenSequentialDataset"],
             help="name of dataset.",
         )
         parser.add_argument(
@@ -66,15 +72,17 @@ class ArgParse:
         parser.add_argument(
             "--ext",
             type=str,
-            default="*.mp4",
-            help="video file extension",
+            default="*.MP4,*.mp4",
+            help="video file extension glob pattern(s). Use comma-separated values for multiple patterns.",
             #       sequential_video_folder
         )
         parser.add_argument(
             "--sequential_label_mode",
             type=str,
             default="video",
-            choices=["video", "frame"],
+            choices=[
+                "video",
+                "frame"],
             help="label mode for SequentialVideoFolder. video: one label per video/clip. frame: one label per frame in a clip.",
         )
         parser.add_argument(

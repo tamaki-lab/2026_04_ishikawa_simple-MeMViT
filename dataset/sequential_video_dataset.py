@@ -61,14 +61,26 @@ class SequentialVideoDataset(IterableDataset):
 
         self.current_time = time.time()
 
-    def get_video_file_paths_and_labels(self):
-        ext = self.ext
-        video_file_paths = [
+    def get_video_glob_patterns(self):
+        if isinstance(self.ext, str):
+            patterns = [pattern.strip() for pattern in self.ext.split(",")]
+            patterns = [pattern for pattern in patterns if pattern]
+            if patterns:
+                return patterns
+
+        return [self.ext]
+
+    def list_video_file_paths(self):
+        video_file_paths = {
             path
-            for path in Path(self.video_path).glob(f"**/{ext}")
+            for pattern in self.get_video_glob_patterns()
+            for path in Path(self.video_path).glob(f"**/{pattern}")
             if not path.is_dir()
-        ]
-        video_file_paths = sorted(video_file_paths)
+        }
+        return sorted(video_file_paths)
+
+    def get_video_file_paths_and_labels(self):
+        video_file_paths = self.list_video_file_paths()
 
         class_list = sorted(
             entry.name for entry in os.scandir(self.video_path) if entry.is_dir()
@@ -105,12 +117,7 @@ class SequentialVideoDataset(IterableDataset):
         return video_annotations
 
     def get_frame_video_file_paths_and_labels(self):
-        video_file_paths = [
-            path
-            for path in Path(self.video_path).glob(f"**/{self.ext}")
-            if not path.is_dir()
-        ]
-        video_file_paths = sorted(video_file_paths)
+        video_file_paths = self.list_video_file_paths()
 
         class_list = sorted({
             interval["label"]
