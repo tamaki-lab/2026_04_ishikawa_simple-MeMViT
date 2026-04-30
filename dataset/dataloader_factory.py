@@ -12,14 +12,16 @@ from dataset import (
     video_folder,
     VideoFolderInfo,
     sequential_video_folder,
+    epic_kitchens_sequential_data_folder,
+    EpicKitchensSequentialDataFolderInfo,
     zero_images,
     ZeroImageInfo,
     transform_image,
     TransformImageInfo,
     transform_video,
     TransformVideoInfo,
+    build_epic_kitchens_sequential_transform,
 )
-from dataset.sequential.sequential_dataset_factory import build_sequential_dataloader
 
 
 @dataclass
@@ -113,39 +115,48 @@ def configure_dataloader(
                 transform=train_transform,
             ))
 
-    elif dataset_name == "SequentialVideoFolder" or dataset_name == "EpicKitchenSequentialDataset":
-        if dataset_name == "EpicKitchenSequentialDataset":
-            train_loader, val_loader, n_classes = build_sequential_dataloader(
-                dataset_name="epic_kitchens",
-                train_dir=args.train_dir,
-                val_dir=args.val_dir,
-                clip_duration=args.clip_duration,
-                video_edge_time=args.video_edge_time,
-                batch_size=args.batch_size,
-                num_workers=args.num_workers,
-                ext=args.ext,
-                frames_per_clip=args.frames_per_clip,
-                train_annotation_path=args.train_annotation_path,
-                val_annotation_path=args.val_annotation_path,
-                label_type=args.epic_label_type,
-                background_label=args.background_label,
-            )
-        else:
-            train_loader, val_loader, n_classes = sequential_video_folder(
-                clip_duration=args.clip_duration,
-                video_edge_time=args.video_edge_time,
-                batch_size=args.batch_size,
-                num_workers=args.num_workers,
-                ext=args.ext,
-                train_dir=args.train_dir,
-                val_dir=args.val_dir,
-                frames_per_clip=args.frames_per_clip,
-                label_mode=args.sequential_label_mode,
-                train_annotation_path=args.train_annotation_path,
-                val_annotation_path=args.val_annotation_path,
-                background_label=args.background_label,
-                epic_label_type=args.epic_label_type,
-            )
+    elif dataset_name == "SequentialVideoFolder":
+        train_loader, val_loader, n_classes = sequential_video_folder(
+            clip_duration=args.clip_duration,
+            video_edge_time=args.video_edge_time,
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+            ext=args.ext,
+            train_dir=args.train_dir,
+            val_dir=args.val_dir,
+            frames_per_clip=args.frames_per_clip,
+            label_mode=args.sequential_label_mode,
+            train_annotation_path=args.train_annotation_path,
+            val_annotation_path=args.val_annotation_path,
+            background_label=args.background_label,
+            epic_label_type=args.epic_label_type,
+        )
+
+    elif dataset_name == "EpicKitchenSequentialDataset":
+        train_transform, val_transform = \
+            build_epic_kitchens_sequential_transform(TransformVideoInfo(
+                frames_per_clip=args.frames_per_clip
+            ))
+        train_loader, val_loader, n_classes = \
+            epic_kitchens_sequential_data_folder(
+                EpicKitchensSequentialDataFolderInfo(
+                    root=args.root,
+                    train_dir=args.train_dir,
+                    val_dir=args.val_dir,
+                    batch_size=args.batch_size,
+                    num_workers=args.num_workers,
+                    train_transform=train_transform,
+                    val_transform=val_transform,
+                    clip_duration=args.clip_duration,
+                    video_edge_time=args.video_edge_time,
+                    ext=args.ext,
+                    frames_per_clip=args.frames_per_clip,
+                    train_annotation_path=args.train_annotation_path,
+                    val_annotation_path=args.val_annotation_path,
+                    label_type=args.epic_label_type,
+                    background_label=args.background_label,
+                ))
+
     else:
         raise ValueError("invalid dataset_name")
 
