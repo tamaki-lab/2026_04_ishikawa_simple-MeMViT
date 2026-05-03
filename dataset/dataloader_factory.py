@@ -5,8 +5,6 @@ import argparse
 from torch.utils.data import DataLoader
 
 from dataset import (
-    cifar10,
-    Cifar10Info,
     image_folder,
     ImageFolderInfo,
     video_folder,

@@ -1,4 +1,3 @@
-from .cifar10 import cifar10, Cifar10Info
 from .image_folder import image_folder, ImageFolderInfo
 from .video_folder import video_folder, VideoFolderInfo
 from .sequential_video_folder import sequential_video_folder
@@ -17,8 +16,6 @@ from .dataloader_factory import configure_dataloader, DataloadersInfo
 from .dataset_pl import TrainValDataModule
 
 __all__ = [
-    'cifar10',
-    'Cifar10Info',
     'image_folder',
     'ImageFolderInfo',
     'video_folder',
