@@ -6,7 +6,6 @@ from .sequential.epic_kitchens_sequential_data_folder import (
     EpicKitchensSequentialDataFolderInfo,
 )
 
-from .zero_images import zero_images, ZeroImageInfo
 from .transforms import (
     transform_image, TransformImageInfo,
     transform_video, TransformVideoInfo,
@@ -23,8 +22,6 @@ __all__ = [
     'sequential_video_folder',
     'epic_kitchens_sequential_data_folder',
     'EpicKitchensSequentialDataFolderInfo',
-    'zero_images',
-    'ZeroImageInfo',
     'transform_image',
     'TransformImageInfo',
     'transform_video',

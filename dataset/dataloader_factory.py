@@ -12,8 +12,6 @@ from dataset import (
     sequential_video_folder,
     epic_kitchens_sequential_data_folder,
     EpicKitchensSequentialDataFolderInfo,
-    zero_images,
-    ZeroImageInfo,
     transform_image,
     TransformImageInfo,
     transform_video,
@@ -35,8 +33,8 @@ class DataloadersInfo:
     n_classes: int
 
 
-SupportedDatasets = Literal["CIFAR10", "ImageFolder", "VideoFolder",
-                            "ZeroImages", "SequentialVideoFolder", "EpicKitchenSequentialDataset"]
+SupportedDatasets = Literal["ImageFolder", "VideoFolder",
+                            "SequentialVideoFolder", "EpicKitchenSequentialDataset"]
 
 
 def configure_dataloader(
@@ -48,7 +46,7 @@ def configure_dataloader(
     Args:
         command_line_args (argparse.Namespace): command line args
         dataset_name (SupportedDatasets): dataset name (str).
-            ["CIFAR10", "ImageFolder", "VideoFolder", "ZeroImages"]
+            ["ImageFolder", "VideoFolder", "SequentialVideoFolder", "EpicKitchenSequentialDataset"]
 
     Raises:
         ValueError: invalid dataset_name is given
@@ -59,19 +57,7 @@ def configure_dataloader(
 
     args = command_line_args
 
-    if dataset_name == "CIFAR10":
-        train_transform, val_transform = \
-            transform_image(TransformImageInfo())
-        train_loader, val_loader, n_classes = \
-            cifar10(Cifar10Info(
-                root=args.root,
-                batch_size=args.batch_size,
-                num_workers=args.num_workers,
-                train_transform=train_transform,
-                val_transform=val_transform
-            ))
-
-    elif dataset_name == "ImageFolder":
+    if dataset_name == "ImageFolder":
         train_transform, val_transform = \
             transform_image(TransformImageInfo())
         train_loader, val_loader, n_classes = \
@@ -101,16 +87,6 @@ def configure_dataloader(
                 val_transform=val_transform,
                 clip_duration=args.clip_duration,
                 clips_per_video=args.clips_per_video
-            ))
-
-    elif dataset_name == "ZeroImages":
-        train_transform, _ = \
-            transform_image(TransformImageInfo())
-        train_loader, val_loader, n_classes = \
-            zero_images(ZeroImageInfo(
-                batch_size=args.batch_size,
-                num_workers=args.num_workers,
-                transform=train_transform,
             ))
 
     elif dataset_name == "SequentialVideoFolder":
