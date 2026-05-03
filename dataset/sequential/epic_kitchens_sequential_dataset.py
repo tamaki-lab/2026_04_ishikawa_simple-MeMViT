@@ -8,6 +8,7 @@ import pandas as pd
 from .base_sequential_video_dataset import (
     BaseSequentialVideoDataset,
     LogicalSampleSpec,
+    SubSampleSpec,
     VideoItem,
 )
 
@@ -178,6 +179,27 @@ class EpicKitchenSequentialDataset(BaseSequentialVideoDataset):
             )
 
         return self.class_to_idx[label_name]
+
+    def build_evaluation_info(
+        self,
+        video_item: VideoItem,
+        logical_sample: LogicalSampleSpec,
+        sub_sample: SubSampleSpec,
+        fps: float,
+        worker_id: int,
+    ) -> dict[str, str]:
+        if self.task == "action_recognition":
+            aggregation_strategy = "mean"
+        elif self.task == "action_anticipation":
+            aggregation_strategy = "last"
+        else:
+            raise ValueError(f"Unsupported task: {self.task}")
+
+        return {
+            "evaluation_mode": "grouped_topk",
+            "group_id": logical_sample.sample_id,
+            "aggregation_strategy": aggregation_strategy,
+        }
 
     def parse_annotations(self) -> dict[str, list[EpicKitchenActionInterval]]:
         df = pd.read_csv(self.annotation_path)

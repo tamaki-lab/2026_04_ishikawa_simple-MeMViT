@@ -6,7 +6,7 @@ import lightning.pytorch as pl
 from lightning.pytorch.callbacks import ModelCheckpoint
 
 
-from utils import compute_topk_accuracy
+from utils import compute_topk_accuracy, configure_validation_evaluator
 from model import configure_model, ModelConfig
 from setup import configure_optimizer, configure_scheduler
 
@@ -50,9 +50,23 @@ class SimpleLightningModel(pl.LightningModule):
             torch_home=self.args.torch_home,
         ))
         self.criterion = torch.nn.CrossEntropyLoss()
+        self.validation_evaluator = configure_validation_evaluator()
 
         # https://lightning.ai/docs/pytorch/stable/common/lightning_module.html#save-hyperparameters
         self.save_hyperparameters()
+
+    def _maybe_reset_online_memory(self, infos):
+        if (
+            hasattr(self.model, "clear_memory")
+            and len(infos) == 1
+            and infos[0].get("sequence_start", infos[0].get("is_first"))
+        ):
+            self.model.clear_memory()
+
+    def on_validation_epoch_start(self):
+        self.validation_evaluator.reset()
+        if hasattr(self.model, "clear_memory"):
+            self.model.clear_memory()
 
     def configure_optimizers(self):
         """see
@@ -145,8 +159,9 @@ class SimpleLightningModel(pl.LightningModule):
         """
 
         data, labels, frame_indices, infos = batch
-        batch_size = data[0].size(0)
+        batch_size = data.size(0)
         video_names = [str(m["video_id"]) for m in infos]
+        self._maybe_reset_online_memory(infos)
 
         logits = self.model(data, video_names=video_names)
         loss = self.criterion(logits, labels)
@@ -190,11 +205,39 @@ class SimpleLightningModel(pl.LightningModule):
         """
 
         data, labels, frame_indices, infos = batch
-        batch_size = data[0].size(0)
+        batch_size = data.size(0)
         video_names = [str(m["video_id"]) for m in infos]
+        self._maybe_reset_online_memory(infos)
 
         logits = self.model(data, video_names=video_names)
         loss = self.criterion(logits, labels)
 
+        if self.validation_evaluator.should_accumulate(infos):
+            self.log(
+                "val_loss",
+                loss.item(),
+                prog_bar=False,
+                on_step=False,
+                on_epoch=True,
+                rank_zero_only=False,
+                sync_dist=True,
+                batch_size=batch_size,
+            )
+            self.validation_evaluator.update(logits=logits, labels=labels, infos=infos)
+            return
+
         top1, top5, *_ = compute_topk_accuracy(logits, labels, topk=(1, 5))
         self.log_val_loss_top15(loss, top1, top5, batch_size)
+
+    def on_validation_epoch_end(self):
+        metrics = self.validation_evaluator.compute()
+        for metric_name, metric_value in metrics.items():
+            self.log(
+                metric_name,
+                metric_value,
+                prog_bar=False,
+                on_step=False,
+                on_epoch=True,
+                rank_zero_only=False,
+                sync_dist=False,
+            )

@@ -1,4 +1,6 @@
 
+import os
+
 import torch
 import lightning.pytorch as pl
 from lightning.pytorch.plugins import TorchSyncBatchNorm
@@ -10,6 +12,47 @@ from callback import configure_callbacks
 from dataset import TrainValDataModule
 from model import SimpleLightningModel
 from model.memvit.config.defaults import get_cfg, assert_and_infer_cfg
+
+
+def _parse_lightning_devices(devices_arg: str):
+    devices_arg = str(devices_arg).strip()
+    if devices_arg == "-1":
+        return -1
+
+    requested_devices = [
+        int(device.strip()) for device in devices_arg.split(",") if device.strip()
+    ]
+
+    visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES")
+    if visible_devices:
+        visible_device_ids = [
+            device.strip() for device in visible_devices.split(",") if device.strip()
+        ]
+        requested_device_ids = [str(device) for device in requested_devices]
+
+        # This project historically uses physical GPU IDs on the CLI, while
+        # Lightning expects indices relative to CUDA_VISIBLE_DEVICES.
+        if requested_device_ids and all(
+            device_id in visible_device_ids for device_id in requested_device_ids
+        ):
+            visible_index_by_id = {
+                device_id: index for index, device_id in enumerate(visible_device_ids)
+            }
+            return [
+                visible_index_by_id[device_id] for device_id in requested_device_ids
+            ]
+
+    return requested_devices
+
+
+def _should_use_ddp_find_unused_parameters(devices):
+    if devices == -1:
+        return torch.cuda.device_count() > 1
+    if isinstance(devices, (list, tuple)):
+        return len(devices) > 1
+    if isinstance(devices, int):
+        return devices > 1
+    return False
 
 
 def main():
@@ -44,13 +87,19 @@ def main():
         exp_name=exp_name
     )
     callbacks = configure_callbacks()
+    devices = _parse_lightning_devices(args.devices)
+    strategy = (
+        "ddp_find_unused_parameters_true"
+        if _should_use_ddp_find_unused_parameters(devices)
+        else "auto"
+    )
 
     # https://lightning.ai/docs/pytorch/stable/common/trainer.html
     # https://lightning.ai/docs/pytorch/stable/common/trainer.html#trainer-flags
     trainer = pl.Trainer(
-        devices=args.devices,
+        devices=devices,
         accelerator="gpu",
-        strategy="auto",
+        strategy=strategy,
         max_epochs=args.num_epochs,
         logger=loggers,
         log_every_n_steps=args.log_interval_steps,

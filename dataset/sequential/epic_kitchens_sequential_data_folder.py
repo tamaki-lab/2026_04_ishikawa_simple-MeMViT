@@ -120,7 +120,7 @@ def epic_kitchens_sequential_data_folder(
     val_loader = DataLoader(
         val_dataset,
         batch_size=epic_kitchens_info.batch_size,
-        drop_last=epic_kitchens_info.drop_last,
+        drop_last=False,
         num_workers=epic_kitchens_info.num_workers,
         collate_fn=epic_kitchens_sequential_collate_fn,
         pin_memory=epic_kitchens_info.pin_memory,

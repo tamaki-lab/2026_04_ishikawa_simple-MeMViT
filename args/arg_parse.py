@@ -101,8 +101,21 @@ class ArgParse:
             "--epic_label_type",
             type=str,
             default="verb",
-            choices=["verb", "noun"],
-            help="EPIC-Kitchens label column to use in SequentialVideoFolder frame mode.",
+            choices=["verb", "noun", "action"],
+            help="EPIC-Kitchens label type to use in sequential datasets.",
+        )
+        parser.add_argument(
+            "--epic_task",
+            type=str,
+            default="action_recognition",
+            choices=["action_recognition", "action_anticipation"],
+            help="EPIC-Kitchens task mode for EpicKitchenSequentialDataset.",
+        )
+        parser.add_argument(
+            "--epic_anticipation_time",
+            type=float,
+            default=1.0,
+            help="seconds of observation gap before the target action for EPIC anticipation.",
         )
         parser.add_argument(
             "--background_label",

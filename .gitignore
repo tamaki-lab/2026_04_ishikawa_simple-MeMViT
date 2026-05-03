@@ -9,4 +9,5 @@ hub/
 .mypy_cache/
 .pytest_cache/
 .venv*/
-.codex
+.codex/
+run_epic_frame_1gpu_memvit.sh

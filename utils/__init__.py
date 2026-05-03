@@ -9,6 +9,12 @@ from .checkpoint import (
     load_from_checkpoint,
 )
 from .tqdm_loss_topk import TqdmLossTopK
+from .validation_evaluator import (
+    ValidationEvaluator,
+    GroupedTopKAccuracyEvaluator,
+    ValidationEvaluatorDispatcher,
+    configure_validation_evaluator,
+)
 
 __all__ = [
     'AverageMeter',
@@ -17,5 +23,9 @@ __all__ = [
     'save_to_checkpoint',
     'save_to_comet',
     'load_from_checkpoint',
-    'TqdmLossTopK'
+    'TqdmLossTopK',
+    'ValidationEvaluator',
+    'GroupedTopKAccuracyEvaluator',
+    'ValidationEvaluatorDispatcher',
+    'configure_validation_evaluator',
 ]

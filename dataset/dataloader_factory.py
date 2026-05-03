@@ -125,10 +125,12 @@ def configure_dataloader(
                     video_edge_time=args.video_edge_time,
                     ext=args.ext,
                     frames_per_clip=args.frames_per_clip,
+                    task=args.epic_task,
                     train_annotation_path=args.train_annotation_path,
                     val_annotation_path=args.val_annotation_path,
                     label_type=args.epic_label_type,
                     background_label=args.background_label,
+                    anticipation_time=args.epic_anticipation_time,
                 ))
 
     else:

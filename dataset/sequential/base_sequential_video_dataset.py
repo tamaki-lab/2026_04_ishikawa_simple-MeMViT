@@ -376,7 +376,7 @@ class BaseSequentialVideoDataset(IterableDataset, ABC):
         fps: float,
         worker_id: int,
     ) -> dict[str, Any]:
-        return {
+        info = {
             "video_id": video_item.video_id,
             "task": self.task,
             "sample_id": logical_sample.sample_id,
@@ -384,6 +384,11 @@ class BaseSequentialVideoDataset(IterableDataset, ABC):
             "num_subsamples": sub_sample.num_subsamples,
             "is_first": sub_sample.is_first,
             "is_last": sub_sample.is_last,
+            "sequence_id": logical_sample.sample_id,
+            "sequence_index": sub_sample.sub_id,
+            "sequence_length": sub_sample.num_subsamples,
+            "sequence_start": sub_sample.is_first,
+            "sequence_end": sub_sample.is_last,
             "logical_start_frame": logical_sample.start_frame,
             "logical_end_frame": logical_sample.end_frame,
             "valid_mask": sub_sample.valid_mask,
@@ -391,6 +396,26 @@ class BaseSequentialVideoDataset(IterableDataset, ABC):
             "fps": fps,
             "worker": worker_id,
         }
+        info.update(
+            self.build_evaluation_info(
+                video_item=video_item,
+                logical_sample=logical_sample,
+                sub_sample=sub_sample,
+                fps=fps,
+                worker_id=worker_id,
+            )
+        )
+        return info
+
+    def build_evaluation_info(
+        self,
+        video_item: VideoItem,
+        logical_sample: LogicalSampleSpec,
+        sub_sample: SubSampleSpec,
+        fps: float,
+        worker_id: int,
+    ) -> dict[str, Any]:
+        return {}
 
     def make_sample(self, x, y, frame_indices, info):
         return SequentialSample(
