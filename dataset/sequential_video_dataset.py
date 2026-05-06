@@ -132,6 +132,36 @@ class SequentialVideoDataset(IterableDataset):
         class_to_idx = {label: i for i, label in enumerate(class_list)}
         return video_file_paths, class_to_idx
 
+    def build_clip_info(
+        self,
+        video_id,
+        duration,
+        fps,
+        worker_id,
+        clip_index,
+        frame_idx,
+        extra=None,
+    ):
+        start_frame = frame_idx[0] if frame_idx else None
+        end_frame = frame_idx[-1] if frame_idx else None
+        start_time = (start_frame / fps) if fps and start_frame is not None else None
+        end_time = (end_frame / fps) if fps and end_frame is not None else None
+
+        info = {
+            "video_id": video_id,
+            "duration": duration,
+            "fps": fps,
+            "worker": worker_id,
+            "clip_index": clip_index,
+            "start_frame": start_frame,
+            "end_frame": end_frame,
+            "start_time": start_time,
+            "end_time": end_time,
+        }
+        if extra:
+            info.update(extra)
+        return info
+
     def __iter__(self):
         worker_info = torch.utils.data.get_worker_info()
         if worker_info is not None:
@@ -179,7 +209,9 @@ class SequentialVideoDataset(IterableDataset):
             category_name = one_video_file_path.parent.name
             if category_name not in self.class_to_idx:
                 print(
-                    f"Skipping file {one_video_file_path}: category '{category_name}' not in class_to_idx. Available classes: {list(self.class_to_idx.keys())}")
+                    f"Skipping file {one_video_file_path}: category '{category_name}' not in class_to_idx. Available classes: {
+                        list(
+                            self.class_to_idx.keys())}")
                 continue
             label = self.class_to_idx[category_name]
             clip_len = int(duration) * int(fps)
@@ -203,12 +235,16 @@ class SequentialVideoDataset(IterableDataset):
                     clip = torch.from_numpy(clip)
                     subclip = self.transform(clip)
 
-                    yield subclip, label, frame_idx, {
-                        "video_id": one_video_file_path,
-                        "duration": duration,
-                        "fps": fps,
-                        "worker": worker_id,
-                    }
+                    info = self.build_clip_info(
+                        video_id=one_video_file_path,
+                        duration=duration,
+                        fps=fps,
+                        worker_id=worker_id,
+                        clip_index=clip_num - 1,
+                        frame_idx=frame_idx,
+                    )
+
+                    yield subclip, label, frame_idx, info
 
                     clip = []
                     clip_num += 1
@@ -226,12 +262,16 @@ class SequentialVideoDataset(IterableDataset):
 
                 subclip = self.transform(clip)
 
-                yield subclip, label, frame_idx, {
-                    "video_id": one_video_file_path,
-                    "duration": duration,
-                    "fps": fps,
-                    "worker": worker_id,
-                }
+                info = self.build_clip_info(
+                    video_id=one_video_file_path,
+                    duration=duration,
+                    fps=fps,
+                    worker_id=worker_id,
+                    clip_index=clip_num - 1,
+                    frame_idx=frame_idx,
+                )
+
+                yield subclip, label, frame_idx, info
 
     def get_annotation_video_id(self, one_video_file_path):
         stem = one_video_file_path.stem
@@ -263,6 +303,8 @@ class SequentialVideoDataset(IterableDataset):
         clip_len = self.frames_per_clip
         total_clip_len = clip_len * self.batch_size
         total_frames = stream.frames
+
+        clip_index = 0
 
         if total_frames == 0:
             intervals = self.annotations.get(video_id, [])
@@ -297,7 +339,13 @@ class SequentialVideoDataset(IterableDataset):
                         "fps": fps,
                         "worker": worker_id,
                         "label_mode": self.label_mode,
+                        "clip_index": clip_index,
+                        "start_frame": frame_idx[0] if frame_idx else None,
+                        "end_frame": frame_idx[-1] if frame_idx else None,
+                        "start_time": (frame_idx[0] / fps) if (frame_idx and fps) else None,
+                        "end_time": (frame_idx[-1] / fps) if (frame_idx and fps) else None,
                     }
+                    clip_index += 1
                     clip = []
                     frame_idx = []
                     action_labels = []
@@ -318,7 +366,13 @@ class SequentialVideoDataset(IterableDataset):
                     "fps": fps,
                     "worker": worker_id,
                     "label_mode": self.label_mode,
+                    "clip_index": clip_index,
+                    "start_frame": frame_idx[0] if frame_idx else None,
+                    "end_frame": frame_idx[-1] if frame_idx else None,
+                    "start_time": (frame_idx[0] / fps) if (frame_idx and fps) else None,
+                    "end_time": (frame_idx[-1] / fps) if (frame_idx and fps) else None,
                 }
+                clip_index += 1
 
         container.close()
 

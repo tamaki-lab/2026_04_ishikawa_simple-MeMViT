@@ -386,6 +386,7 @@ class BaseSequentialVideoDataset(IterableDataset, ABC):
             "is_last": sub_sample.is_last,
             "sequence_id": logical_sample.sample_id,
             "sequence_index": sub_sample.sub_id,
+            "clip_index": sub_sample.sub_id,
             "sequence_length": sub_sample.num_subsamples,
             "sequence_start": sub_sample.is_first,
             "sequence_end": sub_sample.is_last,
