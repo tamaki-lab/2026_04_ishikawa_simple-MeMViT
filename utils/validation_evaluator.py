@@ -52,38 +52,38 @@ class GroupedTopKAccuracyEvaluator(ValidationEvaluator):
         labels: torch.Tensor,
         infos: list[dict[str, Any]],
     ) -> None:
-        if len(infos) != 1:
+        if logits.shape[0] != len(infos) or labels.shape[0] != len(infos):
             raise ValueError(
-                "Grouped sequential validation currently requires batch_size=1 "
-                "so sequence-aware aggregation stays aligned with model state."
+                "GroupedTopKAccuracyEvaluator received inconsistent batch sizes: "
+                f"logits={logits.shape[0]}, labels={labels.shape[0]}, infos={len(infos)}"
             )
 
-        info = infos[0]
-        group_id = str(info["group_id"])
-        aggregation_strategy = str(info.get("aggregation_strategy", "mean"))
-        if aggregation_strategy not in {"mean", "last"}:
-            raise ValueError(
-                "aggregation_strategy must be 'mean' or 'last', "
-                f"but got {aggregation_strategy}"
-            )
+        for sample_logits, sample_label, info in zip(logits, labels, infos):
+            group_id = str(info["group_id"])
+            aggregation_strategy = str(info.get("aggregation_strategy", "mean"))
+            if aggregation_strategy not in {"mean", "last"}:
+                raise ValueError(
+                    "aggregation_strategy must be 'mean' or 'last', "
+                    f"but got {aggregation_strategy}"
+                )
 
-        previous_strategy = self.group_strategies.get(group_id)
-        if previous_strategy is not None and previous_strategy != aggregation_strategy:
-            raise ValueError(
-                f"Inconsistent aggregation strategy for group_id={group_id}: "
-                f"{previous_strategy} vs {aggregation_strategy}"
-            )
+            previous_strategy = self.group_strategies.get(group_id)
+            if previous_strategy is not None and previous_strategy != aggregation_strategy:
+                raise ValueError(
+                    f"Inconsistent aggregation strategy for group_id={group_id}: "
+                    f"{previous_strategy} vs {aggregation_strategy}"
+                )
 
-        self.group_strategies[group_id] = aggregation_strategy
-        self.group_labels[group_id] = int(labels[0].item())
+            self.group_strategies[group_id] = aggregation_strategy
+            self.group_labels[group_id] = int(sample_label.item())
 
-        sample_logits = logits[0].detach().cpu()
-        if aggregation_strategy == "mean":
-            self.group_logits.setdefault(group_id, []).append(sample_logits)
-            return
+            detached_logits = sample_logits.detach().cpu()
+            if aggregation_strategy == "mean":
+                self.group_logits.setdefault(group_id, []).append(detached_logits)
+                continue
 
-        if info.get("sequence_end", info.get("is_last")):
-            self.group_logits[group_id] = [sample_logits]
+            if info.get("sequence_end", info.get("is_last")):
+                self.group_logits[group_id] = [detached_logits]
 
     def compute(self) -> dict[str, float]:
         aggregated_logits = []
