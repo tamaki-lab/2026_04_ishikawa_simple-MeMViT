@@ -1,7 +1,7 @@
 from .image_folder import image_folder, ImageFolderInfo
 from .video_folder import video_folder, VideoFolderInfo
 from .sequential_video_folder import sequential_video_folder
-from .sequential.epic_kitchens_sequential_data_folder import (
+from .sequential.epic_kitchens.epic_kitchens_sequential_data_folder import (
     epic_kitchens_sequential_data_folder,
     EpicKitchensSequentialDataFolderInfo,
 )
