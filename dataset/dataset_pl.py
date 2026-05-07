@@ -1,4 +1,5 @@
 import argparse
+from typing import Any
 
 import lightning.pytorch as pl
 
@@ -10,6 +11,7 @@ class TrainValDataModule(pl.LightningDataModule):
         self,
         command_line_args: argparse.Namespace,
         dataset_name: str,
+        cfg: Any = None,
     ):
         super().__init__()
         self.args = command_line_args
@@ -17,7 +19,8 @@ class TrainValDataModule(pl.LightningDataModule):
         self.dataloaders_info = \
             configure_dataloader(
                 command_line_args=command_line_args,
-                dataset_name=dataset_name  # type: ignore[arg-type]
+                dataset_name=dataset_name,  # type: ignore[arg-type]
+                cfg=cfg,
             )
 
     def train_dataloader(self):
