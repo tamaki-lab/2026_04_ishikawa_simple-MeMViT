@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from .base_sequential_video_dataset import (
+from ..base_sequential_video_dataset import (
     BaseSequentialVideoDataset,
     LogicalSampleSpec,
     SubSampleSpec,
