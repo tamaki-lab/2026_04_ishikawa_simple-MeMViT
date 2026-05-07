@@ -45,7 +45,8 @@ class ArgParse:
                 "VideoFolder",
                 "ZeroImages",
                 "SequentialVideoFolder",
-                "EpicKitchenSequentialDataset"],
+                "EpicKitchenSequentialDataset",
+                "AVADetectionDataset"],
             help="name of dataset.",
         )
         parser.add_argument(
@@ -217,7 +218,7 @@ class ArgParse:
             "--optimizer_name",
             type=str,
             default="SGD",
-            choices=["SGD", "Adam"],
+            choices=["SGD", "Adam", "AdamW", "OrthogonalSGD", "OrthogonalAdamW"],
             help="optimizer name.",
         )
         parser.add_argument(
@@ -243,6 +244,18 @@ class ArgParse:
             type=float,
             default=5e-4,
             help="weight decay."
+        )
+        parser.add_argument(
+            "--orthogonal_beta",
+            type=float,
+            default=0.9,
+            help="EMA coefficient for orthogonal gradient history.",
+        )
+        parser.add_argument(
+            "--orthogonal_eps",
+            type=float,
+            default=1e-12,
+            help="minimum squared norm for orthogonal projection.",
         )
         parser.add_argument(
             "--use_scheduler",
