@@ -1,10 +1,10 @@
-from typing import Iterator, Literal
+from collections.abc import Iterator
 
 from torch.nn.parameter import Parameter
 from torch.optim import Optimizer
-from torch.optim import SGD, Adam
 
-SupportedOptimizers = Literal["SGD", "Adam"]
+from .optimizers import SupportedOptimizers
+from .optimizers import configure_optimizer as _configure_optimizer
 
 
 def configure_optimizer(
@@ -13,38 +13,16 @@ def configure_optimizer(
     lr: float,
     weight_decay: float,
     momentum: float = 0.9,
+    orthogonal_beta: float = 0.9,
+    orthogonal_eps: float = 1e-12,
 ) -> Optimizer:
-    """optimizer factory
-
-    Args:
-        optimizer_name (SupportedOptimizers): optimizer name (str).
-            ["SGD", "Adam"]
-        model_params (Iterator[Parameter]): model parameters.
-            Typically "model.parameters()"
-        lr (float): learning rate.
-        weight_decay (float): weight decay
-        momentum (float, optional): momentum. Defaults to 0.9.
-
-    Raises:
-        ValueError: invalide optimizer name given by command line
-
-    Returns:
-        Optimizer: optimizer
-    """
-
-    if optimizer_name == "SGD":
-        return SGD(
-            model_params,
-            lr=lr,
-            momentum=momentum,
-            weight_decay=weight_decay,
-        )
-
-    if optimizer_name == "Adam":
-        return Adam(
-            model_params,
-            lr=lr,
-            weight_decay=weight_decay,
-        )
-
-    raise ValueError("invalid optimizer_name")
+    """Build an optimizer from flat CLI-style arguments."""
+    return _configure_optimizer(
+        optimizer_name=optimizer_name,
+        model_params=model_params,
+        lr=lr,
+        weight_decay=weight_decay,
+        momentum=momentum,
+        orthogonal_beta=orthogonal_beta,
+        orthogonal_eps=orthogonal_eps,
+    )
