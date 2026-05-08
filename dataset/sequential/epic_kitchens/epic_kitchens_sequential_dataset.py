@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TypeAlias
 
 import pandas as pd
 
@@ -25,6 +26,9 @@ class EpicKitchenActionInterval:
         return f"{self.verb_label}:{self.noun_label}"
 
 
+EpicKitchenLabel: TypeAlias = str | tuple[str, str]
+
+
 class EpicKitchenSequentialDataset(BaseSequentialVideoDataset):
     VALID_TASKS = {
         "action_recognition",
@@ -35,6 +39,7 @@ class EpicKitchenSequentialDataset(BaseSequentialVideoDataset):
         "verb",
         "noun",
         "action",
+        "verb_noun",
     }
 
     def __init__(
@@ -76,7 +81,9 @@ class EpicKitchenSequentialDataset(BaseSequentialVideoDataset):
         self.recognition_label_strategy = recognition_label_strategy
 
         self.annotations: dict[str, list[EpicKitchenActionInterval]] = {}
-        self.sample_id_to_label_name: dict[str, str] = {}
+        self.sample_id_to_label_name: dict[str, EpicKitchenLabel] = {}
+        self.verb_class_to_idx: dict[str, int] = {}
+        self.noun_class_to_idx: dict[str, int] = {}
 
         super().__init__(
             video_path=video_path,
@@ -106,6 +113,30 @@ class EpicKitchenSequentialDataset(BaseSequentialVideoDataset):
         ]
 
     def build_class_to_idx(self) -> dict[str, int]:
+        if self.label_type == "verb_noun":
+            verb_labels = {
+                interval.verb_label
+                for intervals in self.annotations.values()
+                for interval in intervals
+            }
+            noun_labels = {
+                interval.noun_label
+                for intervals in self.annotations.values()
+                for interval in intervals
+            }
+            self.verb_class_to_idx = {
+                label_name: idx
+                for idx, label_name in enumerate(sorted(verb_labels))
+            }
+            self.noun_class_to_idx = {
+                label_name: idx
+                for idx, label_name in enumerate(sorted(noun_labels))
+            }
+            # BaseSequentialVideoDataset expects a single class_to_idx mapping.
+            # For paired verb/noun targets, the per-head mappings above are the
+            # authoritative ones used in make_target.
+            return dict(self.verb_class_to_idx)
+
         labels = {
             self.get_label_name_from_interval(interval)
             for intervals in self.annotations.values()
@@ -171,11 +202,21 @@ class EpicKitchenSequentialDataset(BaseSequentialVideoDataset):
 
         return logical_samples
 
-    def make_target(self, logical_sample: LogicalSampleSpec) -> int:
+    def make_target(self, logical_sample: LogicalSampleSpec) -> int | tuple[int, int]:
         label_name = self.sample_id_to_label_name.get(logical_sample.sample_id)
         if label_name is None:
             raise KeyError(
                 f"Missing label for logical sample: {logical_sample.sample_id}"
+            )
+
+        if self.label_type == "verb_noun":
+            if not isinstance(label_name, tuple):
+                raise TypeError(
+                    "Expected a (verb_label, noun_label) target for verb_noun mode."
+                )
+            return (
+                self.verb_class_to_idx[label_name[0]],
+                self.noun_class_to_idx[label_name[1]],
             )
 
         return self.class_to_idx[label_name]
@@ -250,7 +291,10 @@ class EpicKitchenSequentialDataset(BaseSequentialVideoDataset):
 
         return stem
 
-    def get_label_name_from_interval(self, interval: EpicKitchenActionInterval) -> str:
+    def get_label_name_from_interval(
+        self,
+        interval: EpicKitchenActionInterval,
+    ) -> EpicKitchenLabel:
         if self.label_type == "verb":
             return interval.verb_label
 
@@ -259,5 +303,8 @@ class EpicKitchenSequentialDataset(BaseSequentialVideoDataset):
 
         if self.label_type == "action":
             return interval.action_label
+
+        if self.label_type == "verb_noun":
+            return (interval.verb_label, interval.noun_label)
 
         raise ValueError(f"Unsupported label_type: {self.label_type}")

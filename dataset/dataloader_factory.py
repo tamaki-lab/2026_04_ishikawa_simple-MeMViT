@@ -30,11 +30,11 @@ class DataloadersInfo:
 
         train_loader (torch.utils.data.DataLoader): training set loader
         val_loader (torch.utils.data.DataLoader): validation set loader
-        n_classes (int): number of classes
+        n_classes (int | tuple[int, ...]): number of classes
     """
     train_loader: DataLoader
     val_loader: DataLoader
-    n_classes: int
+    n_classes: int | tuple[int, ...]
 
 
 SupportedDatasets = Literal["ImageFolder", "VideoFolder",

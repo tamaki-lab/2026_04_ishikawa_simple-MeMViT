@@ -45,7 +45,7 @@ def epic_kitchens_sequential_collate_fn(batch):
 
 def epic_kitchens_sequential_data_folder(
         epic_kitchens_info: EpicKitchensSequentialDataFolderInfo
-) -> Tuple[DataLoader, DataLoader, int]:
+) -> Tuple[DataLoader, DataLoader, int | tuple[int, int]]:
     root_train_dir = os.path.join(
         epic_kitchens_info.root,
         epic_kitchens_info.train_dir
@@ -91,19 +91,51 @@ def epic_kitchens_sequential_data_folder(
         shuffle=False,
     )
 
-    shared_labels = sorted({
-        *train_dataset.class_to_idx.keys(),
-        *val_dataset.class_to_idx.keys(),
-    })
-    shared_class_to_idx = {
-        label_name: idx for idx, label_name in enumerate(shared_labels)
-    }
-    train_dataset.class_to_idx = shared_class_to_idx
-    val_dataset.class_to_idx = shared_class_to_idx
+    if epic_kitchens_info.label_type == "verb_noun":
+        shared_verb_labels = sorted({
+            *train_dataset.verb_class_to_idx.keys(),
+            *val_dataset.verb_class_to_idx.keys(),
+        })
+        shared_noun_labels = sorted({
+            *train_dataset.noun_class_to_idx.keys(),
+            *val_dataset.noun_class_to_idx.keys(),
+        })
+        shared_verb_class_to_idx = {
+            label_name: idx for idx, label_name in enumerate(shared_verb_labels)
+        }
+        shared_noun_class_to_idx = {
+            label_name: idx for idx, label_name in enumerate(shared_noun_labels)
+        }
 
-    n_classes = len(shared_class_to_idx)
-    train_dataset.num_classes = n_classes
-    val_dataset.num_classes = n_classes
+        train_dataset.verb_class_to_idx = shared_verb_class_to_idx
+        val_dataset.verb_class_to_idx = shared_verb_class_to_idx
+        train_dataset.noun_class_to_idx = shared_noun_class_to_idx
+        val_dataset.noun_class_to_idx = shared_noun_class_to_idx
+
+        # Preserve the legacy class_to_idx attribute for callers that expect it.
+        train_dataset.class_to_idx = shared_verb_class_to_idx
+        val_dataset.class_to_idx = shared_verb_class_to_idx
+
+        n_classes = (
+            len(shared_verb_class_to_idx),
+            len(shared_noun_class_to_idx),
+        )
+        train_dataset.num_classes = n_classes
+        val_dataset.num_classes = n_classes
+    else:
+        shared_labels = sorted({
+            *train_dataset.class_to_idx.keys(),
+            *val_dataset.class_to_idx.keys(),
+        })
+        shared_class_to_idx = {
+            label_name: idx for idx, label_name in enumerate(shared_labels)
+        }
+        train_dataset.class_to_idx = shared_class_to_idx
+        val_dataset.class_to_idx = shared_class_to_idx
+
+        n_classes = len(shared_class_to_idx)
+        train_dataset.num_classes = n_classes
+        val_dataset.num_classes = n_classes
 
     train_loader = DataLoader(
         train_dataset,

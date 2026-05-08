@@ -102,8 +102,8 @@ class ArgParse:
             "--epic_label_type",
             type=str,
             default="verb",
-            choices=["verb", "noun", "action"],
-            help="EPIC-Kitchens label type to use in sequential datasets.",
+            choices=["verb", "noun", "action", "verb_noun"],
+            help="EPIC-Kitchens label type to use in sequential datasets. Use verb_noun for paired multi-head verb/noun targets.",
         )
         parser.add_argument(
             "--epic_task",
