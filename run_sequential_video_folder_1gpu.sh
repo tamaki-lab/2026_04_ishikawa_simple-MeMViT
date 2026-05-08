@@ -10,7 +10,9 @@ python main_pl.py \
     -w 8 \
     -b 6 \
     -e 20 \
-    --optimizer_name Adam \
+    --optimizer_name OrthogonalAdamW \
+    --orthogonal_beta 0.9 \
+    --orthogonal_eps 1e-12 \
     --log_interval_steps 10 \
     --devices 1 \
     --cfg_file configs/MeMViT_16_K400.yaml \
