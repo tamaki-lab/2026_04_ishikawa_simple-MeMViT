@@ -100,6 +100,14 @@ class BaseSequentialVideoDataset(IterableDataset, ABC):
     def make_target(self, logical_sample: LogicalSampleSpec) -> Any:
         pass
 
+    def make_target_for_subsample(
+        self,
+        logical_sample: LogicalSampleSpec,
+        sub_sample: SubSampleSpec,
+        logical_target: Any,
+    ) -> Any:
+        return logical_target
+
     def __iter__(self):
         worker_id, num_workers = self.get_worker_info()
 
@@ -125,7 +133,7 @@ class BaseSequentialVideoDataset(IterableDataset, ABC):
                     if not sub_samples:
                         continue
 
-                    target = self.make_target(logical_sample)
+                    logical_target = self.make_target(logical_sample)
 
                     for sub_sample in sub_samples:
                         try:
@@ -143,6 +151,11 @@ class BaseSequentialVideoDataset(IterableDataset, ABC):
                             )
                             break
 
+                        target = self.make_target_for_subsample(
+                            logical_sample=logical_sample,
+                            sub_sample=sub_sample,
+                            logical_target=logical_target,
+                        )
                         x = self.build_x(clip_frames)
                         info = self.build_info(
                             video_item=video_item,
@@ -426,5 +439,6 @@ class BaseSequentialVideoDataset(IterableDataset, ABC):
             info=info,
         )
 
+    # ファイル数を示す
     def __len__(self):
         return len(self.video_items)
