@@ -14,7 +14,7 @@ from .sequential.fiftysalads.fiftysalads_sequential_data_folder import (
 from .transforms import (
     transform_image, TransformImageInfo,
     transform_video, TransformVideoInfo,
-    build_epic_kitchens_sequential_transform,
+    build_sequential_video_transform,
     build_ava_sequential_transform,
 )
 from .dataloader_factory import configure_dataloader, DataloadersInfo
@@ -34,7 +34,7 @@ __all__ = [
     'TransformImageInfo',
     'transform_video',
     'TransformVideoInfo',
-    'build_epic_kitchens_sequential_transform',
+    'build_sequential_video_transform',
     'build_ava_sequential_transform',
     'configure_dataloader',
     'DataloadersInfo',

@@ -86,10 +86,10 @@ def transform_video(
     return train_transform, val_transform
 
 
-def build_epic_kitchens_sequential_transform(
+def build_sequential_video_transform(
         trans_video_info: TransformVideoInfo
 ) -> Tuple[image_transform.Compose, image_transform.Compose]:
-    """transform for EPIC-KITCHENS sequential video clips
+    """transform for sequential video clips
 
     Args:
         trans_video_info (TransformVideoInfo): information for video transform

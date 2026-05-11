@@ -18,7 +18,7 @@ from dataset import (
     TransformImageInfo,
     transform_video,
     TransformVideoInfo,
-    build_epic_kitchens_sequential_transform,
+    build_sequential_video_transform,
     build_ava_sequential_transform,
 )
 from model.memvit.config.defaults import get_cfg
@@ -114,7 +114,7 @@ def configure_dataloader(
 
     elif dataset_name == "EpicKitchenSequentialDataset":
         train_transform, val_transform = \
-            build_epic_kitchens_sequential_transform(TransformVideoInfo(
+            build_sequential_video_transform(TransformVideoInfo(
                 frames_per_clip=args.frames_per_clip
             ))
         train_loader, val_loader, n_classes = \
@@ -141,7 +141,7 @@ def configure_dataloader(
 
     elif dataset_name == "50SaladsSequentialDataset":
         train_transform, val_transform = \
-            build_epic_kitchens_sequential_transform(TransformVideoInfo(
+            build_sequential_video_transform(TransformVideoInfo(
                 frames_per_clip=args.frames_per_clip
             ))
         train_loader, val_loader, n_classes = \
