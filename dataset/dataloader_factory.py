@@ -12,8 +12,6 @@ from dataset import (
     sequential_video_folder,
     epic_kitchens_sequential_data_folder,
     EpicKitchensSequentialDataFolderInfo,
-    ava_sequential_data_folder,
-    AvaSequentialDataFolderInfo,
     transform_image,
     TransformImageInfo,
     transform_video,
@@ -38,8 +36,7 @@ class DataloadersInfo:
 
 
 SupportedDatasets = Literal["ImageFolder", "VideoFolder",
-                            "SequentialVideoFolder", "EpicKitchenSequentialDataset",
-                            "AVADetectionDataset"]
+                            "SequentialVideoFolder", "EpicKitchenSequentialDataset"]
 
 
 def configure_dataloader(
@@ -52,7 +49,7 @@ def configure_dataloader(
     Args:
         command_line_args (argparse.Namespace): command line args
         dataset_name (SupportedDatasets): dataset name (str).
-            ["ImageFolder", "VideoFolder", "SequentialVideoFolder", "EpicKitchenSequentialDataset", "AVADetectionDataset"]
+            ["ImageFolder", "VideoFolder", "SequentialVideoFolder", "EpicKitchenSequentialDataset"]
 
     Raises:
         ValueError: invalid dataset_name is given
@@ -137,30 +134,6 @@ def configure_dataloader(
                     label_type=args.epic_label_type,
                     background_label=args.background_label,
                     anticipation_time=args.epic_anticipation_time,
-                ))
-
-    elif dataset_name == "AVADetectionDataset":
-        if cfg is None:
-            cfg = get_cfg()
-            if args.cfg_file is not None:
-                cfg.merge_from_file(args.cfg_file)
-            if args.opts is not None:
-                cfg.merge_from_list(args.opts)
-
-        train_transform, val_transform = \
-            build_ava_sequential_transform(TransformVideoInfo(
-                frames_per_clip=cfg.DATA.NUM_FRAMES,
-                val_shorter_side_size=cfg.DATA.TEST_CROP_SIZE,
-                crop_size=cfg.DATA.TRAIN_CROP_SIZE,
-            ))
-        train_loader, val_loader, n_classes = \
-            ava_sequential_data_folder(
-                AvaSequentialDataFolderInfo(
-                    cfg=cfg,
-                    batch_size=args.batch_size,
-                    num_workers=args.num_workers,
-                    train_transform=train_transform,
-                    val_transform=val_transform,
                 ))
 
     else:

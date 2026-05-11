@@ -5,10 +5,7 @@ from .sequential.epic_kitchens.epic_kitchens_sequential_data_folder import (
     epic_kitchens_sequential_data_folder,
     EpicKitchensSequentialDataFolderInfo,
 )
-from .sequential.ava_sequential_data_folder import (
-    ava_sequential_data_folder,
-    AvaSequentialDataFolderInfo,
-)
+
 
 from .transforms import (
     transform_image, TransformImageInfo,
@@ -27,8 +24,6 @@ __all__ = [
     'sequential_video_folder',
     'epic_kitchens_sequential_data_folder',
     'EpicKitchensSequentialDataFolderInfo',
-    'ava_sequential_data_folder',
-    'AvaSequentialDataFolderInfo',
     'transform_image',
     'TransformImageInfo',
     'transform_video',
