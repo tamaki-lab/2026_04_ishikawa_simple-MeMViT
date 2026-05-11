@@ -5,6 +5,10 @@ from .sequential.epic_kitchens.epic_kitchens_sequential_data_folder import (
     epic_kitchens_sequential_data_folder,
     EpicKitchensSequentialDataFolderInfo,
 )
+from .sequential.fiftysalads.fiftysalads_sequential_data_folder import (
+    fiftysalads_sequential_data_folder,
+    FiftySaladsSequentialDataFolderInfo,
+)
 
 
 from .transforms import (
@@ -24,6 +28,8 @@ __all__ = [
     'sequential_video_folder',
     'epic_kitchens_sequential_data_folder',
     'EpicKitchensSequentialDataFolderInfo',
+    'fiftysalads_sequential_data_folder',
+    'FiftySaladsSequentialDataFolderInfo',
     'transform_image',
     'TransformImageInfo',
     'transform_video',
