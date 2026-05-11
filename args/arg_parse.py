@@ -46,6 +46,7 @@ class ArgParse:
                 "ZeroImages",
                 "SequentialVideoFolder",
                 "EpicKitchenSequentialDataset",
+                "50SaladsSequentialDataset",
                 "AVADetectionDataset"],
             help="name of dataset.",
         )
@@ -123,6 +124,37 @@ class ArgParse:
             type=str,
             default="background",
             help="fallback label for frames without annotation in SequentialVideoFolder frame mode.",
+        )
+        parser.add_argument(
+            "--label_granularity",
+            type=str,
+            default="fine",
+            choices=["fine"],
+            help="label granularity for supported sequential datasets such as 50Salads.",
+        )
+        parser.add_argument(
+            "--split_id",
+            type=int,
+            default=1,
+            help="dataset split id for supported sequential datasets such as 50Salads.",
+        )
+        parser.add_argument(
+            "--annotation_root",
+            type=str,
+            default=None,
+            help="root directory containing frame-level annotation files.",
+        )
+        parser.add_argument(
+            "--split_root",
+            type=str,
+            default=None,
+            help="root directory containing train/val split files.",
+        )
+        parser.add_argument(
+            "--label_map_path",
+            type=str,
+            default=None,
+            help="optional label map file to define class ordering explicitly.",
         )
         # model
         parser.add_argument(
