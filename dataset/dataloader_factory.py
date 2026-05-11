@@ -12,6 +12,8 @@ from dataset import (
     sequential_video_folder,
     epic_kitchens_sequential_data_folder,
     EpicKitchensSequentialDataFolderInfo,
+    fiftysalads_sequential_data_folder,
+    FiftySaladsSequentialDataFolderInfo,
     transform_image,
     TransformImageInfo,
     transform_video,
@@ -36,7 +38,8 @@ class DataloadersInfo:
 
 
 SupportedDatasets = Literal["ImageFolder", "VideoFolder",
-                            "SequentialVideoFolder", "EpicKitchenSequentialDataset"]
+                            "SequentialVideoFolder", "EpicKitchenSequentialDataset",
+                            "50SaladsSequentialDataset"]
 
 
 def configure_dataloader(
@@ -134,6 +137,32 @@ def configure_dataloader(
                     label_type=args.epic_label_type,
                     background_label=args.background_label,
                     anticipation_time=args.epic_anticipation_time,
+                ))
+
+    elif dataset_name == "50SaladsSequentialDataset":
+        train_transform, val_transform = \
+            build_epic_kitchens_sequential_transform(TransformVideoInfo(
+                frames_per_clip=args.frames_per_clip
+            ))
+        train_loader, val_loader, n_classes = \
+            fiftysalads_sequential_data_folder(
+                FiftySaladsSequentialDataFolderInfo(
+                    root=args.root,
+                    train_dir=args.train_dir,
+                    val_dir=args.val_dir,
+                    batch_size=args.batch_size,
+                    num_workers=args.num_workers,
+                    train_transform=train_transform,
+                    val_transform=val_transform,
+                    clip_duration=args.clip_duration,
+                    video_edge_time=args.video_edge_time,
+                    ext=args.ext,
+                    annotation_root=args.annotation_root,
+                    split_root=args.split_root,
+                    split_id=args.split_id,
+                    label_granularity=args.label_granularity,
+                    label_map_path=args.label_map_path,
+                    frames_per_clip=args.frames_per_clip,
                 ))
 
     else:
