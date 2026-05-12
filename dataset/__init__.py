@@ -5,7 +5,7 @@ from .sequential.epic_kitchens.epic_kitchens_sequential_data_folder import (
     epic_kitchens_sequential_data_folder,
     EpicKitchensSequentialDataFolderInfo,
 )
-from .sequential.fiftysalads.fiftysalads_sequential_data_folder import (
+from .sequential.fiftysalads.salads50_sequential_data_folder import (
     fiftysalads_sequential_data_folder,
     FiftySaladsSequentialDataFolderInfo,
 )

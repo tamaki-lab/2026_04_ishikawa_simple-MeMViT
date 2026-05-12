@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 
 from torchvision.transforms import v2 as transforms
 
-from .fiftysalads_sequential_dataset import FiftySaladsSequentialDataset
+from .salads50_sequential_dataset import FiftySaladsSequentialDataset
 
 
 @dataclass
@@ -41,7 +41,7 @@ def fiftysalads_sequential_collate_fn(batch):
     return xs, ys, frame_indices, infos
 
 
-def fiftysalads_sequential_data_folder(
+def salads50_sequential_data_folder(
     fiftysalads_info: FiftySaladsSequentialDataFolderInfo,
 ) -> Tuple[DataLoader, DataLoader, int]:
     root_train_dir = os.path.join(
