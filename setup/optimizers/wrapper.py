@@ -19,8 +19,10 @@ class GradientTransformOptimizer(Optimizer):
         self.inner_optimizer = inner_optimizer
         self.gradient_transform = gradient_transform
         self.optimizer_name = optimizer_name
+        self._initializing_from_inner = True
 
         super().__init__(inner_optimizer.param_groups, inner_optimizer.defaults)
+        self._initializing_from_inner = False
         self.param_groups = inner_optimizer.param_groups
         self.defaults = inner_optimizer.defaults
         self.state = inner_optimizer.state
@@ -64,6 +66,10 @@ class GradientTransformOptimizer(Optimizer):
         )
 
     def add_param_group(self, param_group: dict) -> None:
+        if self._initializing_from_inner:
+            Optimizer.add_param_group(self, param_group)
+            return
+
         self.inner_optimizer.add_param_group(param_group)
         self._sync_from_inner_optimizer()
 
