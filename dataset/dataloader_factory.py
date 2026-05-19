@@ -12,14 +12,13 @@ from dataset import (
     sequential_video_folder,
     epic_kitchens_sequential_data_folder,
     EpicKitchensSequentialDataFolderInfo,
-    fiftysalads_sequential_data_folder,
-    FiftySaladsSequentialDataFolderInfo,
+    salads50_sequential_data_folder,
+    Salads50SequentialDataFolderInfo,
     transform_image,
     TransformImageInfo,
     transform_video,
     TransformVideoInfo,
     build_sequential_video_transform,
-    build_ava_sequential_transform,
 )
 from model.memvit.config.defaults import get_cfg
 
@@ -39,7 +38,7 @@ class DataloadersInfo:
 
 SupportedDatasets = Literal["ImageFolder", "VideoFolder",
                             "SequentialVideoFolder", "EpicKitchenSequentialDataset",
-                            "50SaladsSequentialDataset"]
+                            "Salads50SequentialDataset"]
 
 
 def configure_dataloader(
@@ -139,14 +138,14 @@ def configure_dataloader(
                     anticipation_time=args.epic_anticipation_time,
                 ))
 
-    elif dataset_name == "50SaladsSequentialDataset":
+    elif dataset_name == "Salads50SequentialDataset":
         train_transform, val_transform = \
             build_sequential_video_transform(TransformVideoInfo(
                 frames_per_clip=args.frames_per_clip
             ))
         train_loader, val_loader, n_classes = \
-            fiftysalads_sequential_data_folder(
-                FiftySaladsSequentialDataFolderInfo(
+            salads50_sequential_data_folder(
+                Salads50SequentialDataFolderInfo(
                     root=args.root,
                     train_dir=args.train_dir,
                     val_dir=args.val_dir,

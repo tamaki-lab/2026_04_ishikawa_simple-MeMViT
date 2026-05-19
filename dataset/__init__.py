@@ -5,9 +5,9 @@ from .sequential.epic_kitchens.epic_kitchens_sequential_data_folder import (
     epic_kitchens_sequential_data_folder,
     EpicKitchensSequentialDataFolderInfo,
 )
-from .sequential.fiftysalads.salads50_sequential_data_folder import (
-    fiftysalads_sequential_data_folder,
-    FiftySaladsSequentialDataFolderInfo,
+from .sequential.salads50.salads50_sequential_data_folder import (
+    salads50_sequential_data_folder,
+    Salads50SequentialDataFolderInfo,
 )
 
 
@@ -15,7 +15,6 @@ from .transforms import (
     transform_image, TransformImageInfo,
     transform_video, TransformVideoInfo,
     build_sequential_video_transform,
-    build_ava_sequential_transform,
 )
 from .dataloader_factory import configure_dataloader, DataloadersInfo
 from .dataset_pl import TrainValDataModule
@@ -28,14 +27,13 @@ __all__ = [
     'sequential_video_folder',
     'epic_kitchens_sequential_data_folder',
     'EpicKitchensSequentialDataFolderInfo',
-    'fiftysalads_sequential_data_folder',
-    'FiftySaladsSequentialDataFolderInfo',
+    'salads50_sequential_data_folder',
+    'Salads50SequentialDataFolderInfo',
     'transform_image',
     'TransformImageInfo',
     'transform_video',
     'TransformVideoInfo',
     'build_sequential_video_transform',
-    'build_ava_sequential_transform',
     'configure_dataloader',
     'DataloadersInfo',
     'TrainValDataModule',

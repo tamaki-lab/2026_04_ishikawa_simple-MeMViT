@@ -14,15 +14,15 @@ from ..base_sequential_video_dataset import (
 
 
 @dataclass(frozen=True)
-class FiftySaladsSplitSpec:
+class Salads50SplitSpec:
     split_name: str
     candidate_names: tuple[str, ...]
 
 
-class FiftySaladsSequentialDataset(BaseSequentialVideoDataset):
+class Salads50SequentialDataset(BaseSequentialVideoDataset):
     VALID_LABEL_GRANULARITIES = {"fine"}
     SPLIT_SPECS = {
-        "train": FiftySaladsSplitSpec(
+        "train": Salads50SplitSpec(
             split_name="train",
             candidate_names=(
                 "train.split{split_id}.bundle",
@@ -30,7 +30,7 @@ class FiftySaladsSequentialDataset(BaseSequentialVideoDataset):
                 "train.split{split_id}",
             ),
         ),
-        "val": FiftySaladsSplitSpec(
+        "val": Salads50SplitSpec(
             split_name="val",
             candidate_names=(
                 "test.split{split_id}.bundle",
@@ -68,9 +68,9 @@ class FiftySaladsSequentialDataset(BaseSequentialVideoDataset):
                 f"but got {label_granularity}"
             )
         if annotation_root is None:
-            raise ValueError("annotation_root is required for FiftySaladsSequentialDataset")
+            raise ValueError("annotation_root is required for Salads50SequentialDataset")
         if split_root is None:
-            raise ValueError("split_root is required for FiftySaladsSequentialDataset")
+            raise ValueError("split_root is required for Salads50SequentialDataset")
 
         self.annotation_root = Path(annotation_root)
         self.split_root = Path(split_root)
@@ -104,23 +104,32 @@ class FiftySaladsSequentialDataset(BaseSequentialVideoDataset):
             for video_id in split_video_ids
         }
 
-        video_paths = self.list_video_paths()
-        items: list[VideoItem] = []
-        for path in video_paths:
-            video_id = self.resolve_video_id(path)
-            if video_id not in self.allowed_video_ids:
-                continue
-            items.append(
-                VideoItem(
-                    path=path,
-                    video_id=video_id,
-                    meta={
-                        "dataset": "50salads",
-                        "annotation_path": self.annotation_path_by_video[video_id],
-                    },
-                )
+        video_path_by_id = {
+            self.resolve_video_id(path): path
+            for path in self.list_video_paths()
+        }
+        missing_video_ids = [
+            video_id
+            for video_id in split_video_ids
+            if video_id not in video_path_by_id
+        ]
+        if missing_video_ids:
+            raise FileNotFoundError(
+                "Could not find 50Salads videos for split entries under "
+                f"{self.video_path}. Missing video_ids: {missing_video_ids[:5]}"
             )
-        return items
+
+        return [
+            VideoItem(
+                path=video_path_by_id[video_id],
+                video_id=video_id,
+                meta={
+                    "dataset": "50salads",
+                    "annotation_path": self.annotation_path_by_video[video_id],
+                },
+            )
+            for video_id in split_video_ids
+        ]
 
     def build_class_to_idx(self) -> dict[str, int]:
         if self.label_map_path is not None:
@@ -210,17 +219,22 @@ class FiftySaladsSequentialDataset(BaseSequentialVideoDataset):
 
         split_path = self.resolve_split_path(split_spec)
         video_ids: list[str] = []
+        seen_video_ids: set[str] = set()
         for line in split_path.read_text().splitlines():
             stripped = line.strip()
             if not stripped:
                 continue
-            video_ids.append(Path(stripped).stem)
+            video_id = Path(stripped).stem
+            if video_id in seen_video_ids:
+                continue
+            seen_video_ids.add(video_id)
+            video_ids.append(video_id)
 
         if not video_ids:
             raise ValueError(f"Split file is empty: {split_path}")
         return video_ids
 
-    def resolve_split_path(self, split_spec: FiftySaladsSplitSpec) -> Path:
+    def resolve_split_path(self, split_spec: Salads50SplitSpec) -> Path:
         for candidate_name in split_spec.candidate_names:
             candidate_path = self.split_root / candidate_name.format(split_id=self.split_id)
             if candidate_path.exists():
