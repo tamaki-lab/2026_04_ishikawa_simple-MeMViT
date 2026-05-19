@@ -41,3 +41,59 @@ def compute_topk_accuracy(
             res.append(correct_k.item() * 100.0 / batch_size)
 
         return tuple(res)
+
+
+def build_framewise_valid_mask(
+    infos: list[dict],
+    temporal_dim: int,
+    device: torch.device,
+) -> torch.Tensor:
+    masks = []
+    for info in infos:
+        valid_mask = info.get("valid_mask")
+        if valid_mask is None:
+            mask = torch.ones(temporal_dim, dtype=torch.bool, device=device)
+        else:
+            mask = torch.as_tensor(valid_mask, dtype=torch.bool, device=device)
+            if mask.numel() != temporal_dim:
+                raise ValueError(
+                    "valid_mask length must match the temporal dimension, "
+                    f"but got {mask.numel()} for T={temporal_dim}."
+                )
+        masks.append(mask)
+    return torch.stack(masks, dim=0)
+
+
+def flatten_framewise_logits_and_labels(
+    logits: torch.Tensor,
+    labels: torch.Tensor,
+    valid_mask: torch.Tensor | None = None,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    if logits.ndim != 3:
+        raise ValueError(
+            f"Expected framewise logits shaped [batch, time, classes], but got {tuple(logits.shape)}."
+        )
+    if labels.ndim != 2:
+        raise ValueError(
+            f"Expected framewise labels shaped [batch, time], but got {tuple(labels.shape)}."
+        )
+    if logits.shape[:2] != labels.shape:
+        raise ValueError(
+            "Framewise logits and labels must share batch/time dimensions, "
+            f"but got logits={tuple(logits.shape)} and labels={tuple(labels.shape)}."
+        )
+
+    flat_logits = logits.reshape(-1, logits.shape[-1])
+    flat_labels = labels.reshape(-1)
+
+    if valid_mask is None:
+        return flat_logits, flat_labels
+
+    if valid_mask.shape != labels.shape:
+        raise ValueError(
+            "valid_mask must have the same shape as labels, "
+            f"but got valid_mask={tuple(valid_mask.shape)} and labels={tuple(labels.shape)}."
+        )
+
+    flat_mask = valid_mask.reshape(-1).to(device=logits.device, dtype=torch.bool)
+    return flat_logits[flat_mask], flat_labels[flat_mask]

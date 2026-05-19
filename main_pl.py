@@ -55,6 +55,17 @@ def _should_use_ddp_find_unused_parameters(devices):
     return False
 
 
+def _configure_model_class_counts(cfg, n_classes):
+    if isinstance(n_classes, tuple):
+        cfg.MODEL.NUM_CLASSES_LIST = list(n_classes)
+        if len(n_classes) > 0:
+            cfg.MODEL.NUM_CLASSES = int(n_classes[0])
+        return
+
+    cfg.MODEL.NUM_CLASSES_LIST = []
+    cfg.MODEL.NUM_CLASSES = int(n_classes)
+
+
 def main():
     assert torch.cuda.is_available()
 
@@ -78,6 +89,8 @@ def main():
         cfg.merge_from_list(args.opts)
 
     cfg.DETECTION.ENABLE = False
+    cfg.DATA.NUM_FRAMES = args.frames_per_clip
+    _configure_model_class_counts(cfg, data_module.n_classes)
 
     cfg = assert_and_infer_cfg(cfg)
 
