@@ -4,6 +4,8 @@ from torch.nn.parameter import Parameter
 from torch.optim import Optimizer
 from torch.optim import SGD, Adam, AdamW
 
+from .orthogonalAdamW import OrthogonalAdamW
+
 SupportedOptimizers = Literal["SGD", "Adam", "AdamW", "OrthogonalSGD", "OrthogonalAdamW"]
 
 
@@ -26,10 +28,10 @@ def configure_optimizer(
         lr (float): learning rate.
         weight_decay (float): weight decay
         momentum (float, optional): momentum. Defaults to 0.9.
-        orthogonal_beta (float, optional): placeholder for orthogonal
-            optimizers' EMA coefficient. Accepted for API compatibility.
-        orthogonal_eps (float, optional): placeholder for orthogonal
-            optimizers' projection epsilon. Accepted for API compatibility.
+        orthogonal_beta (float, optional): EMA coefficient for orthogonal
+            gradient history.
+        orthogonal_eps (float, optional): epsilon used for orthogonal
+            projection stability.
 
     Raises:
         ValueError: invalide optimizer name given by command line
@@ -37,7 +39,6 @@ def configure_optimizer(
     Returns:
         Optimizer: optimizer
     """
-    del orthogonal_beta, orthogonal_eps
 
     if optimizer_name == "SGD":
         return SGD(
@@ -61,9 +62,18 @@ def configure_optimizer(
             weight_decay=weight_decay,
         )
 
-    if optimizer_name in {"OrthogonalSGD", "OrthogonalAdamW"}:
+    if optimizer_name == "OrthogonalAdamW":
+        return OrthogonalAdamW(
+            model_params,
+            lr=lr,
+            weight_decay=weight_decay,
+            orthogonal_beta=orthogonal_beta,
+            orthogonal_eps=orthogonal_eps,
+        )
+
+    if optimizer_name == "OrthogonalSGD":
         raise NotImplementedError(
-            f"{optimizer_name} is accepted by the CLI but is not implemented in setup/optimizer.py yet."
+            "OrthogonalSGD is accepted by the CLI but is not implemented in setup/optimizer.py yet."
         )
 
     raise ValueError("invalid optimizer_name")
