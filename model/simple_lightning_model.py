@@ -59,6 +59,16 @@ class SimpleLightningModel(pl.LightningModule):
         self.validation_evaluator = configure_validation_evaluator(
             head_names=self._get_configured_multi_head_names(),
         )
+        self._did_log_debug_train_batch_metrics = False
+        self._debug_train_top1_threshold = 99.0
+        self._debug_high_train_batch_logs = 0
+        self._max_debug_high_train_batch_logs = 5
+        self._debug_trace_video_id = None
+        self._debug_trace_last_sub_id = None
+        self._debug_trace_logs = 0
+        self._max_debug_trace_logs = 12
+        self._prev_train_action_key = None
+        self._prev_train_video_id = None
 
         # https://lightning.ai/docs/pytorch/stable/common/lightning_module.html#save-hyperparameters
         self.save_hyperparameters()
@@ -81,10 +91,18 @@ class SimpleLightningModel(pl.LightningModule):
         ]
 
     def on_train_epoch_start(self):
+        self._prev_train_action_key = None
+        self._prev_train_video_id = None
         if hasattr(self.model, "clear_memory"):
             self.model.clear_memory()
 
+    def on_train_epoch_end(self):
+        self.print(
+            f"[epoch_transition] finished train epoch {self.current_epoch}; starting validation"
+        )
+
     def on_validation_epoch_start(self):
+        self.print(f"[epoch_transition] entered validation for epoch {self.current_epoch}")
         self.validation_evaluator.reset()
         if hasattr(self.model, "clear_memory"):
             self.model.clear_memory()
@@ -112,6 +130,170 @@ class SimpleLightningModel(pl.LightningModule):
             return list(configured_names)
         return [f"head{head_idx}" for head_idx in range(1, num_heads + 1)]
 
+    def _extract_first_valid_action_key(self, labels, infos):
+        if not infos or not torch.is_tensor(labels):
+            return None
+
+        first_labels = labels[0]
+        if first_labels.ndim == 0:
+            return int(first_labels.detach().item())
+
+        if first_labels.ndim == 1:
+            valid_mask = infos[0].get("valid_mask")
+            if valid_mask is not None and len(valid_mask) == first_labels.shape[0]:
+                for frame_idx, is_valid in enumerate(valid_mask):
+                    if is_valid and frame_idx < first_labels.shape[0]:
+                        return int(first_labels[frame_idx].detach().item())
+                return None
+
+            label_values = first_labels.detach().tolist()
+            if len(label_values) == 1:
+                return int(label_values[0])
+            return tuple(int(value) for value in label_values)
+
+        return tuple(int(value) for value in first_labels.reshape(-1).detach().tolist())
+
+    def _compute_train_transition_flags(self, labels, infos):
+        first_info = infos[0] if infos else {}
+        current_video_id = first_info.get("video_id")
+        current_action_key = self._extract_first_valid_action_key(labels, infos)
+
+        action_flag = 0.0
+        if (
+            current_action_key is not None
+            and self._prev_train_action_key is not None
+            and current_action_key != self._prev_train_action_key
+        ):
+            action_flag = 1.0
+
+        video_flag = 0.0
+        if (
+            current_video_id is not None
+            and self._prev_train_video_id is not None
+            and current_video_id != self._prev_train_video_id
+        ):
+            video_flag = 1.0
+
+        if current_action_key is not None:
+            self._prev_train_action_key = current_action_key
+        if current_video_id is not None:
+            self._prev_train_video_id = current_video_id
+
+        return {
+            "train_action_flag": action_flag,
+            "train_video_flag": video_flag,
+        }
+
+    def _maybe_log_debug_train_sub_id_trace(self, infos):
+        if not getattr(self.args, "debug_train_batch_metrics", False):
+            return
+        if not self.training or not infos:
+            return
+
+        first_info = infos[0]
+        video_id = first_info.get("video_id")
+        sub_id = first_info.get("sub_id")
+        num_subsamples = first_info.get("num_subsamples")
+        if video_id is None or sub_id is None:
+            return
+
+        if self._debug_trace_video_id is None:
+            self._debug_trace_video_id = video_id
+
+        if video_id != self._debug_trace_video_id:
+            return
+        if self._debug_trace_logs >= self._max_debug_trace_logs:
+            return
+
+        if self._debug_trace_last_sub_id is None:
+            status = "start"
+        else:
+            expected_sub_id = self._debug_trace_last_sub_id + 1
+            status = (
+                "contiguous"
+                if sub_id == expected_sub_id
+                else f"jump(expected {expected_sub_id})"
+            )
+
+        self.print(
+            "[debug_train_sub_id_trace] "
+            f"video_id={video_id} sub_id={sub_id}/{num_subsamples} status={status}"
+        )
+        self._debug_trace_last_sub_id = sub_id
+        self._debug_trace_logs += 1
+
+    def _maybe_log_debug_train_batch_metrics(self, logits, labels, infos, top1, top5):
+        if not getattr(self.args, "debug_train_batch_metrics", False):
+            return
+        if not self.training:
+            return
+
+        should_log_first_batch = not self._did_log_debug_train_batch_metrics
+        should_log_high_top1 = (
+            top1 >= self._debug_train_top1_threshold
+            and self._debug_high_train_batch_logs < self._max_debug_high_train_batch_logs
+        )
+        if not should_log_first_batch and not should_log_high_top1:
+            return
+
+        valid_mask = build_framewise_valid_mask(
+            infos=infos,
+            temporal_dim=labels.shape[1],
+            device=logits.device,
+        )
+        flat_logits, flat_labels = flatten_framewise_logits_and_labels(
+            logits=logits,
+            labels=labels,
+            valid_mask=valid_mask,
+        )
+
+        tag_parts = []
+        if should_log_first_batch:
+            tag_parts.append("first train batch")
+        if should_log_high_top1:
+            tag_parts.append(
+                f"high train_top1>={self._debug_train_top1_threshold:.0f}"
+            )
+
+        if flat_labels.numel() == 0:
+            self.print(
+                "[debug_train_batch_metrics] "
+                + ", ".join(tag_parts)
+                + " has no valid labels"
+            )
+            self._did_log_debug_train_batch_metrics = True
+            if should_log_high_top1:
+                self._debug_high_train_batch_logs += 1
+            return
+
+        flat_preds = flat_logits.argmax(dim=1)
+        label_ids, label_counts = torch.unique(flat_labels, return_counts=True)
+        pred_ids, pred_counts = torch.unique(flat_preds, return_counts=True)
+
+        def summarize(ids, counts):
+            pairs = sorted(
+                zip(ids.tolist(), counts.tolist()),
+                key=lambda item: item[1],
+                reverse=True,
+            )
+            return ", ".join(
+                f"{label_id}:{count}" for label_id, count in pairs[:10]
+            )
+
+        first_info = infos[0] if infos else {}
+        self.print("[debug_train_batch_metrics] " + ", ".join(tag_parts))
+        self.print(f"  epoch={self.current_epoch} global_step={self.global_step}")
+        self.print(f"  logits_shape={tuple(logits.shape)} labels_shape={tuple(labels.shape)}")
+        self.print(f"  valid_frames={flat_labels.numel()} top1={top1:.2f} top5={top5:.2f}")
+        self.print(f"  sample_id={first_info.get('sample_id')} video_id={first_info.get('video_id')}")
+        self.print(f"  sub_id={first_info.get('sub_id')} num_subsamples={first_info.get('num_subsamples')}")
+        self.print(f"  frame_range={first_info.get('logical_start_frame')}..{first_info.get('logical_end_frame')}")
+        self.print(f"  label_hist={summarize(label_ids, label_counts)}")
+        self.print(f"  pred_hist={summarize(pred_ids, pred_counts)}")
+        self._did_log_debug_train_batch_metrics = True
+        if should_log_high_top1:
+            self._debug_high_train_batch_logs += 1
+
     def _compute_framewise_loss_and_metrics(self, logits, labels, infos):
         valid_mask = build_framewise_valid_mask(
             infos=infos,
@@ -130,6 +312,7 @@ class SimpleLightningModel(pl.LightningModule):
         per_frame_loss = self.framewise_criterion(flat_logits, flat_labels)
         loss = per_frame_loss.mean()
         top1, top5, *_ = compute_topk_accuracy(flat_logits, flat_labels, topk=(1, 5))
+        self._maybe_log_debug_train_batch_metrics(logits, labels, infos, top1, top5)
         return loss, top1, top5, {}
 
     def _compute_loss_and_metrics(self, logits, labels, infos):
@@ -237,9 +420,9 @@ class SimpleLightningModel(pl.LightningModule):
         )
         self.log_dict(
             {
-                "train_loss": loss.detach(),
-                "train_top1": top1,
-                "train_top5": top5,
+                "pbar_train_loss": loss.detach(),
+                "pbar_train_top1": top1,
+                "pbar_train_top5": top5,
             },
             prog_bar=True,  # keep the terminal progress bar compact
             logger=False,
@@ -248,6 +431,16 @@ class SimpleLightningModel(pl.LightningModule):
             rank_zero_only=False,
             sync_dist=True,
             batch_size=batch_size,
+        )
+
+    def log_train_step_flags(self, metrics):
+        self.log_dict(
+            metrics,
+            prog_bar=False,
+            on_step=True,
+            on_epoch=False,
+            rank_zero_only=True,
+            sync_dist=False,
         )
 
     def training_step(self, batch, batch_idx):
@@ -274,6 +467,7 @@ class SimpleLightningModel(pl.LightningModule):
         data, labels, _, infos = batch
         batch_size = data.size(0)
         video_names = self._get_memory_keys(infos)
+        self._maybe_log_debug_train_sub_id_trace(infos)
         self._maybe_reset_online_memory(infos)
 
         logits = self.model(data, video_names=video_names)
@@ -283,8 +477,31 @@ class SimpleLightningModel(pl.LightningModule):
             infos,
         )
         self.log_train_loss_top15(loss, top1, top5, batch_size, extra_metrics=extra_metrics)
+        self.log_train_step_flags(self._compute_train_transition_flags(labels, infos))
 
         return loss
+
+    def on_after_backward(self):
+        super().on_after_backward()
+
+        norms = []
+        for _, parameter in self.named_parameters():
+            if parameter.grad is not None:
+                norms.append(parameter.grad.detach().norm(2))
+
+        if not norms:
+            return
+
+        average_norm = torch.stack(norms).mean()
+        self.log(
+            "train_grad_norm",
+            average_norm,
+            prog_bar=False,
+            on_step=True,
+            on_epoch=False,
+            rank_zero_only=True,
+            sync_dist=False,
+        )
 
     def log_val_loss_top15(self, loss, top1, top5, batch_size, extra_metrics=None):
         metrics = {
@@ -300,7 +517,7 @@ class SimpleLightningModel(pl.LightningModule):
         self.log_dict(
             metrics,
             prog_bar=False,
-            on_step=False,
+            on_step=True,
             on_epoch=True,
             rank_zero_only=False,
             sync_dist=True,  # sync log metrics for validation
@@ -368,3 +585,4 @@ class SimpleLightningModel(pl.LightningModule):
                 rank_zero_only=False,
                 sync_dist=False,
             )
+        self.print(f"[epoch_transition] finished validation for epoch {self.current_epoch}")
