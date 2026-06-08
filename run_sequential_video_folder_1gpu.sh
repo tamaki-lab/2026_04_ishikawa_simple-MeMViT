@@ -19,7 +19,7 @@ python3 main_pl.py \
     -w 4 \
     -e 10 \
     -vi 1 \
-    --optimizer_name AdamW \
+    --optimizer_name OrthogonalAdamW \
     -lr 0.0001 \
     --use_scheduler \
     --log_interval_steps 1 \
