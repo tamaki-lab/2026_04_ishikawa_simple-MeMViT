@@ -109,7 +109,7 @@ def main():
 
     # https://lightning.ai/docs/pytorch/stable/common/trainer.html
     # https://lightning.ai/docs/pytorch/stable/common/trainer.html#trainer-flags
-    trainer = pl.Trainer(
+    trainer_kwargs = dict(
         devices=devices,
         accelerator="gpu",
         strategy=strategy,
@@ -118,14 +118,21 @@ def main():
         log_every_n_steps=args.log_interval_steps,
         accumulate_grad_batches=args.grad_accum,
         num_sanity_val_steps=0,
-        val_check_interval=args.val_interval_steps,
+        callbacks=callbacks,
+        plugins=[TorchSyncBatchNorm()],
+    )
+    if args.val_interval_steps is None:
+        trainer_kwargs["check_val_every_n_epoch"] = args.val_interval_epochs
+    else:
+        trainer_kwargs["val_check_interval"] = args.val_interval_steps
+
+    trainer = pl.Trainer(
+        **trainer_kwargs,
         # precision="16-true",  # for FP16 training, use with caution for nan/inf
         # fast_dev_run=True, # only for debug
         # fast_dev_run=5,  # only for debug
         # limit_train_batches=15,  # only for debug
         # limit_val_batches=15,  # only for debug
-        callbacks=callbacks,
-        plugins=[TorchSyncBatchNorm()],
         # profiler="simple",
     )
 
