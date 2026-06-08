@@ -12,3 +12,4 @@ hub/
 .codex/
 test/
 batch_debug.csv
+data/
