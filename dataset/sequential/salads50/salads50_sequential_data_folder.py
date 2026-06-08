@@ -24,9 +24,15 @@ class Salads50SequentialDataFolderInfo():
     ext: str
     annotation_root: str
     split_root: str
+    train_annotation_root: str | None = None
+    val_annotation_root: str | None = None
+    train_split_root: str | None = None
+    val_split_root: str | None = None
     split_id: int = 1
     label_granularity: str = "fine"
     label_map_path: str | None = None
+    background_label: str = "background"
+    max_train_clips_per_video: int | None = None
     frames_per_clip: int = 16
     drop_last: bool = True
     pin_memory: bool = False
@@ -100,14 +106,24 @@ def salads50_sequential_data_folder(
         expect_dir=True,
         fallback_to_root=True,
     )
-    annotation_root = _resolve_existing_path(
+    train_annotation_root = _resolve_existing_path(
         salads50_info.root,
-        salads50_info.annotation_root,
+        salads50_info.train_annotation_root or salads50_info.annotation_root,
         expect_dir=True,
     )
-    split_root = _resolve_existing_path(
+    val_annotation_root = _resolve_existing_path(
         salads50_info.root,
-        salads50_info.split_root,
+        salads50_info.val_annotation_root or salads50_info.annotation_root,
+        expect_dir=True,
+    )
+    train_split_root = _resolve_existing_path(
+        salads50_info.root,
+        salads50_info.train_split_root or salads50_info.split_root,
+        expect_dir=True,
+    )
+    val_split_root = _resolve_existing_path(
+        salads50_info.root,
+        salads50_info.val_split_root or salads50_info.split_root,
         expect_dir=True,
     )
     label_map_path = _resolve_existing_path(
@@ -123,11 +139,13 @@ def salads50_sequential_data_folder(
         ext=salads50_info.ext,
         is_train=True,
         transform=salads50_info.train_transform,
-        annotation_root=annotation_root,
-        split_root=split_root,
+        annotation_root=train_annotation_root,
+        split_root=train_split_root,
         split_id=salads50_info.split_id,
         label_granularity=salads50_info.label_granularity,
         label_map_path=label_map_path,
+        background_label=salads50_info.background_label,
+        max_train_clips_per_video=salads50_info.max_train_clips_per_video,
         frames_per_clip=salads50_info.frames_per_clip,
         batch_size=salads50_info.batch_size,
         split_name="train",
@@ -139,11 +157,12 @@ def salads50_sequential_data_folder(
         ext=salads50_info.ext,
         is_train=False,
         transform=salads50_info.val_transform,
-        annotation_root=annotation_root,
-        split_root=split_root,
+        annotation_root=val_annotation_root,
+        split_root=val_split_root,
         split_id=salads50_info.split_id,
         label_granularity=salads50_info.label_granularity,
         label_map_path=label_map_path,
+        background_label=salads50_info.background_label,
         frames_per_clip=salads50_info.frames_per_clip,
         batch_size=salads50_info.batch_size,
         shuffle=False,
@@ -178,13 +197,10 @@ def salads50_sequential_data_folder(
         val_dataset,
         batch_size=salads50_info.batch_size,
         drop_last=False,
-        num_workers=salads50_info.num_workers,
+        num_workers=0,
         collate_fn=salads50_sequential_collate_fn,
         pin_memory=salads50_info.pin_memory,
-        persistent_workers=(
-            salads50_info.persistent_workers
-            if salads50_info.num_workers > 0 else False
-        ),
+        persistent_workers=False,
     )
 
     return train_loader, val_loader, len(shared_class_to_idx)
