@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=0
 
 python3 main_pl.py \
     -d Salads50SequentialDataset \
@@ -14,7 +14,7 @@ python3 main_pl.py \
     --label_granularity fine \
     -m memvit \
     --frames_per_clip 16 \
-    -b 2 \
+    -b 1 \
     --grad_accum 1 \
     -w 4 \
     -e 10 \
