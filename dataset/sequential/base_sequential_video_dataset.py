@@ -112,10 +112,13 @@ class BaseSequentialVideoDataset(IterableDataset, ABC):
         worker_id, num_workers = self.get_worker_info()
 
         video_items = list(self.video_items)
+        worker_video_items = self.split_by_worker(video_items, worker_id, num_workers)
         if self.shuffle and self.is_train:
-            random.shuffle(video_items)
+            # Split first so workers never see overlapping videos, then shuffle
+            # each worker's local shard for train-time randomness.
+            random.shuffle(worker_video_items)
 
-        for video_item in self.split_by_worker(video_items, worker_id, num_workers):
+        for video_item in worker_video_items:
             try:
                 container, stream, fps = self.open_video(video_item.path)
             except Exception as error:

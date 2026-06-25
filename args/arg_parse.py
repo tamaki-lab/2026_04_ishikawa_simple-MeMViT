@@ -132,7 +132,7 @@ class ArgParse:
             "--label_granularity",
             type=str,
             default="fine",
-            choices=["fine"],
+            choices=["coarse", "fine"],
             help="label granularity for supported sequential datasets such as 50Salads.",
         )
         parser.add_argument(
@@ -148,16 +148,51 @@ class ArgParse:
             help="root directory containing frame-level annotation files.",
         )
         parser.add_argument(
+            "--train_annotation_root",
+            type=str,
+            default=None,
+            help="optional train-only annotation directory. Falls back to --annotation_root when omitted.",
+        )
+        parser.add_argument(
+            "--val_annotation_root",
+            type=str,
+            default=None,
+            help="optional val-only annotation directory. Falls back to --annotation_root when omitted.",
+        )
+        parser.add_argument(
             "--split_root",
             type=str,
             default=None,
             help="root directory containing train/val split files.",
         )
         parser.add_argument(
+            "--train_split_root",
+            type=str,
+            default=None,
+            help="optional train-only split directory. Falls back to --split_root when omitted.",
+        )
+        parser.add_argument(
+            "--val_split_root",
+            type=str,
+            default=None,
+            help="optional val-only split directory. Falls back to --split_root when omitted.",
+        )
+        parser.add_argument(
             "--label_map_path",
             type=str,
             default=None,
             help="optional label map file to define class ordering explicitly.",
+        )
+        parser.add_argument(
+            "--debug_train_batch_metrics",
+            action="store_true",
+            help="print detailed metrics for the first training batch and batches with very high train_top1.",
+        )
+        parser.add_argument(
+            "--max_train_clips_per_video",
+            type=int,
+            default=None,
+            help="optional cap on the number of train clips used per video for supported sequential datasets such as 50Salads.",
         )
         # model
         parser.add_argument(

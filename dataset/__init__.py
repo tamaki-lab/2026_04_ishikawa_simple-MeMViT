@@ -1,5 +1,3 @@
-from .image_folder import image_folder, ImageFolderInfo
-from .video_folder import video_folder, VideoFolderInfo
 from .sequential_video_folder import sequential_video_folder
 from .sequential.epic_kitchens.epic_kitchens_sequential_data_folder import (
     epic_kitchens_sequential_data_folder,
@@ -20,10 +18,6 @@ from .dataloader_factory import configure_dataloader, DataloadersInfo
 from .dataset_pl import TrainValDataModule
 
 __all__ = [
-    'image_folder',
-    'ImageFolderInfo',
-    'video_folder',
-    'VideoFolderInfo',
     'sequential_video_folder',
     'epic_kitchens_sequential_data_folder',
     'EpicKitchensSequentialDataFolderInfo',

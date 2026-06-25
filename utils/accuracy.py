@@ -28,7 +28,8 @@ def compute_topk_accuracy(
     assert len(topk) >= 1
 
     with torch.no_grad():
-        maxk = max(topk)
+        num_classes = logits.shape[1]
+        maxk = min(max(topk), num_classes)
         batch_size = labels.size(0)
 
         _, pred = logits.topk(maxk, 1, True, True)
@@ -37,7 +38,8 @@ def compute_topk_accuracy(
 
         res = []
         for k in topk:
-            correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
+            effective_k = min(k, num_classes)
+            correct_k = correct[:effective_k].reshape(-1).float().sum(0, keepdim=True)
             res.append(correct_k.item() * 100.0 / batch_size)
 
         return tuple(res)
